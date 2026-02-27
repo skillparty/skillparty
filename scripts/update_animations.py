@@ -2,10 +2,11 @@ import os
 import requests
 import json
 import random
+import traceback
 from datetime import datetime, timedelta
 
 GITHUB_TOKEN = os.environ.get("GITHUB_TOKEN")
-USER = os.environ.get("GITHUB_ACTOR", "skillparty")
+USER = os.environ.get("GITHUB_REPOSITORY_OWNER", "skillparty")
 
 HEADERS = {"Authorization": f"Bearer {GITHUB_TOKEN}"} if GITHUB_TOKEN else {}
 
@@ -72,31 +73,36 @@ def simulate_contributions():
     return grid
 
 def process_github_contribs(data):
-    weeks = data["data"]["user"]["contributionsCollection"]["contributionCalendar"]["weeks"]
-    days = []
-    for w in weeks:
-        for d in w["contributionDays"]:
-            count = d["contributionCount"]
-            if count == 0: val = 0
-            elif count <= 3: val = 1
-            elif count <= 8: val = 2
-            elif count <= 14: val = 3
-            else: val = 4
-            days.append(val)
-            
-    # We need exactly 294 days (42 cols x 7 rows)
-    needed = 42 * 7
-    days = days[-needed:]
-    
-    # Pad if not enough
-    if len(days) < needed:
-        days = [0]*(needed - len(days)) + days
+    try:
+        weeks = data["data"]["user"]["contributionsCollection"]["contributionCalendar"]["weeks"]
+        days = []
+        for w in weeks:
+            for d in w["contributionDays"]:
+                count = d["contributionCount"]
+                if count == 0: val = 0
+                elif count <= 3: val = 1
+                elif count <= 8: val = 2
+                elif count <= 14: val = 3
+                else: val = 4
+                days.append(val)
+                
+        # We need exactly 294 days (42 cols x 7 rows)
+        needed = 42 * 7
+        days = days[-needed:]
         
-    grid = []
-    for i in range(42):
-        start = i * 7
-        grid.append(days[start:start+7])
-    return grid
+        # Pad if not enough
+        if len(days) < needed:
+            days = [0]*(needed - len(days)) + days
+            
+        grid = []
+        for i in range(42):
+            start = i * 7
+            grid.append(days[start:start+7])
+        return grid
+    except Exception as e:
+        print(f"Error parsing contributions: {e}")
+        traceback.print_exc()
+        return simulate_contributions()
 
 def generate_black_hole_svg(grid):
     COLS, ROWS = 42, 7
@@ -369,30 +375,42 @@ def fetch_languages():
     )
     if response.status_code == 200:
         data = response.json()
-        if "errors" in data: return simulate_languages()
+        print("Languages data response:")
+        print(json.dumps(data, indent=2)[:500] + "...")
+        if "errors" in data:
+            print("GraphQL Error (langs):", data["errors"])
+            return simulate_languages()
         
-        lang_stats = {}
-        for repo in data["data"]["user"]["repositories"]["nodes"]:
-            for edge in repo["languages"]["edges"]:
-                name = edge["node"]["name"]
-                color = edge["node"]["color"]
-                size = edge["size"]
-                if name not in lang_stats:
-                    lang_stats[name] = {"color": color, "size": 0}
-                lang_stats[name]["size"] += size
-                
-        # Sort by size and take top 5
-        sorted_langs = sorted(lang_stats.items(), key=lambda x: x[1]["size"], reverse=True)[:5]
-        total_size = sum(x[1]["size"] for x in sorted_langs)
-        
-        results = []
-        for name, data in sorted_langs:
-            percent = (data["size"] / total_size) * 100
-            results.append({"name": name, "color": data["color"], "percent": percent})
+        try:
+            lang_stats = {}
+            repos = data["data"]["user"]["repositories"]["nodes"]
+            for repo in repos:
+                for edge in repo["languages"]["edges"]:
+                    name = edge["node"]["name"]
+                    color = edge["node"]["color"]
+                    size = edge["size"]
+                    if name not in lang_stats:
+                        lang_stats[name] = {"color": color, "size": 0}
+                    lang_stats[name]["size"] += size
+                    
+            # Sort by size and take top 5
+            sorted_langs = sorted(lang_stats.items(), key=lambda x: x[1]["size"], reverse=True)[:5]
+            total_size = sum(x[1]["size"] for x in sorted_langs)
             
-        # Get last active repo
-        last_repo = data["data"]["user"]["repositories"]["nodes"][0]["name"]
-        return results, last_repo
+            results = []
+            for lang_name, lang_data in sorted_langs:
+                percent = (lang_data["size"] / total_size) * 100
+                results.append({"name": lang_name, "color": lang_data["color"], "percent": percent})
+                
+            # Get last active repo
+            last_repo = repos[0]["name"] if repos else "unknown"
+            return results, last_repo
+        except Exception as e:
+            print(f"Error parsing languages: {e}")
+            traceback.print_exc()
+            return simulate_languages()
+    else:
+        print("Failed to fetch languages:", response.status_code, response.text)
     return simulate_languages()
 
 def simulate_languages():
@@ -453,14 +471,22 @@ def generate_cyber_langs(langs, last_repo):
         f.write(svg)
 
 os.makedirs("dist", exist_ok=True)
-print("Fetching contributions...")
-grid = fetch_contributions()
-print("Generating Matrix SVG...")
-generate_black_hole_svg(grid)
+print(f"User: {USER}")
+print(f"Token present: {bool(GITHUB_TOKEN)}")
 
-print("Fetching Languages...")
-langs, last_repo = fetch_languages()
-print("Generating Cyber Langs SVG...")
-generate_cyber_langs(langs, last_repo)
+try:
+    print("Fetching contributions...")
+    grid = fetch_contributions()
+    print("Generating Matrix SVG...")
+    generate_black_hole_svg(grid)
 
-print("Done! Artifacts saved to dist/")
+    print("Fetching Languages...")
+    langs, last_repo = fetch_languages()
+    print("Generating Cyber Langs SVG...")
+    generate_cyber_langs(langs, last_repo)
+
+    print("Done! Artifacts saved to dist/")
+except Exception as e:
+    print(f"FATAL ERROR: {e}")
+    traceback.print_exc()
+    raise
