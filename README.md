@@ -14,12 +14,16 @@
 </div>
 
 <div align="center">
-  <img src="./assets/contribution-matrix.svg" alt="Contribution Matrix" width="100%" />
+  <img src="https://github.com/skillparty/skillparty/blob/output/contribution-matrix.svg?raw=true" alt="Contribution Matrix" width="100%" />
 </div>
 
 ---
 
 ### 📊 Stats
+
+<div align="center">
+  <img src="https://github.com/skillparty/skillparty/blob/output/cyber-langs.svg?raw=true" alt="Cyberpunk Languages Stats" width="500" />
+</div>
 
 <div align="center">
   <a href="https://github.com/skillparty">
