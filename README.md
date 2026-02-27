@@ -14,7 +14,7 @@
 </div>
 
 <div align="center">
-  <img src="./assets/warp-drive.svg" alt="Warp Drive Animation" width="100%" />
+  <img src="./assets/contribution-matrix.svg" alt="Contribution Matrix" width="100%" />
 </div>
 
 ---
@@ -25,10 +25,6 @@
   <a href="https://github.com/skillparty">
     <img src="https://github-readme-streak-stats.herokuapp.com?user=skillparty&theme=transparent&hide_border=true&ring=22D3EE&fire=F97316&currStreakLabel=E2E8F0&sideLabels=94A3B8&currStreakNum=E2E8F0&sideNums=94A3B8&dates=475569" height="180" alt="Streak Stats"/>
   </a>
-</div>
-
-<div align="center">
-  <img src="https://github-profile-trophy.vercel.app/?username=skillparty&theme=algolia&no-frame=true&column=6&margin-w=10" alt="Trophies" width="680"/>
 </div>
 
 ---
