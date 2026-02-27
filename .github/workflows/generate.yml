@@ -28,7 +28,7 @@ jobs:
 
       - name: Run script to generate SVGs
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.GH_PAT }}
         run: python scripts/update_animations.py
 
       - name: Publish to output branch
