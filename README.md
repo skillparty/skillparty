@@ -1,6 +1,6 @@
 <div align="center">
 
-  <img src="https://readme-typing-svg.demolab.com?font=Fira+Code&weight=700&size=28&duration=3000&pause=1000&color=22D3EE&center=true&vCenter=true&multiline=true&width=700&height=80&lines=%F0%9F%9A%80+SkillParty+%7C+Creative+Dev+Studio;Building+software+%26+experiences+that+matter" alt="Typing SVG" />
+  <img src="https://readme-typing-svg.demolab.com?font=Fira+Code&weight=700&size=24&duration=3000&pause=1000&color=22D3EE&center=true&vCenter=true&width=500&height=35&lines=SkillParty+%7C+Creative+Dev+Studio" alt="Typing SVG" />
 
   <br/>
 
@@ -13,12 +13,8 @@
 
 </div>
 
----
-
-### 🕹️ Space Destroyer Pro
-
 <div align="center">
-  <img src="./assets/space-destroyer-pro.svg" alt="Space Destroyer Pro Animation" width="100%" />
+  <img src="./assets/warp-drive.svg" alt="Warp Drive Animation" width="100%" />
 </div>
 
 ---
@@ -27,17 +23,12 @@
 
 <div align="center">
   <a href="https://github.com/skillparty">
-    <img src="https://github-readme-stats.vercel.app/api?username=skillparty&show_icons=true&theme=github_dark&hide_border=true&icon_color=22D3EE&title_color=E2E8F0&text_color=94A3B8&ring_color=22D3EE&bg_color=00000000&cache_seconds=86400" height="165" alt="Stats"/>
-  </a>
-  <a href="https://github.com/skillparty">
-    <img src="https://github-readme-stats.vercel.app/api/top-langs/?username=skillparty&layout=compact&theme=github_dark&hide_border=true&title_color=E2E8F0&text_color=94A3B8&langs_count=8&bg_color=00000000&cache_seconds=86400" height="165" alt="Top Languages"/>
+    <img src="https://github-readme-streak-stats.herokuapp.com?user=skillparty&theme=transparent&hide_border=true&ring=22D3EE&fire=F97316&currStreakLabel=E2E8F0&sideLabels=94A3B8&currStreakNum=E2E8F0&sideNums=94A3B8&dates=475569" height="180" alt="Streak Stats"/>
   </a>
 </div>
 
 <div align="center">
-  <a href="https://github.com/skillparty">
-    <img src="https://github-readme-streak-stats.herokuapp.com?user=skillparty&theme=transparent&hide_border=true&ring=22D3EE&fire=F97316&currStreakLabel=E2E8F0&sideLabels=94A3B8&currStreakNum=E2E8F0&sideNums=94A3B8&dates=475569" height="165" alt="Streak Stats"/>
-  </a>
+  <img src="https://github-profile-trophy.vercel.app/?username=skillparty&theme=algolia&no-frame=true&column=6&margin-w=10" alt="Trophies" width="680"/>
 </div>
 
 ---
@@ -51,6 +42,6 @@
 
   <br/>
 
-  <sub>🌎 Bolivia · Freelance Software Developer · Siempre explorando fronteras en la nube, SEO, Next.js App Router y Flutter</sub>
+  <sub>🌎 Bolivia · Freelance Software Developer · Explorando fronteras en la nube, SEO, Next.js App Router y Flutter</sub>
 
 </div>
