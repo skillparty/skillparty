@@ -11,10 +11,6 @@
 ### ☄️ Variante Auto: Contribution Shooter
 
 <div align="center">
-  <img src="https://raw.githubusercontent.com/skillparty/skillparty/output/github-contribution-grid-snake.gif" alt="Space Contribution Attack" width="100%" />
-</div>
-
-<div align="center">
   <picture>
     <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/skillparty/skillparty/output/github-contribution-grid-snake-dark.svg" />
     <source media="(prefers-color-scheme: light)" srcset="https://raw.githubusercontent.com/skillparty/skillparty/output/github-contribution-grid-snake.svg" />
