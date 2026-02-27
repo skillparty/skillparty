@@ -38,7 +38,7 @@ def fetch_contributions():
         headers=HEADERS
     )
     
-    if response.status_status_code == 200:
+    if response.status_code == 200:
         data = response.json()
         print("Contributions data response:")
         print(json.dumps(data, indent=2)[:500] + "...")
