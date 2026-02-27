@@ -21,26 +21,16 @@
   <img src="./assets/space-destroyer-pro.svg" alt="Space Destroyer Pro Animation" width="100%" />
 </div>
 
-### ☄️ Contribution Attack
-
-<div align="center">
-  <picture>
-    <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/skillparty/skillparty/output/github-contribution-grid-snake-dark.svg" />
-    <source media="(prefers-color-scheme: light)" srcset="https://raw.githubusercontent.com/skillparty/skillparty/output/github-contribution-grid-snake.svg" />
-    <img src="https://raw.githubusercontent.com/skillparty/skillparty/output/github-contribution-grid-snake-dark.svg" alt="Contribution Attack Animation" width="100%" />
-  </picture>
-</div>
-
 ---
 
 ### 📊 Stats
 
 <div align="center">
   <a href="https://github.com/skillparty">
-    <img src="https://github-readme-stats.vercel.app/api?username=skillparty&show_icons=true&theme=transparent&hide_border=true&icon_color=22D3EE&title_color=E2E8F0&text_color=94A3B8&ring_color=22D3EE" height="165" alt="Stats"/>
+    <img src="https://github-readme-stats.vercel.app/api?username=skillparty&show_icons=true&theme=github_dark&hide_border=true&icon_color=22D3EE&title_color=E2E8F0&text_color=94A3B8&ring_color=22D3EE&bg_color=00000000&cache_seconds=86400" height="165" alt="Stats"/>
   </a>
   <a href="https://github.com/skillparty">
-    <img src="https://github-readme-stats.vercel.app/api/top-langs/?username=skillparty&layout=compact&theme=transparent&hide_border=true&title_color=E2E8F0&text_color=94A3B8&langs_count=8" height="165" alt="Top Languages"/>
+    <img src="https://github-readme-stats.vercel.app/api/top-langs/?username=skillparty&layout=compact&theme=github_dark&hide_border=true&title_color=E2E8F0&text_color=94A3B8&langs_count=8&bg_color=00000000&cache_seconds=86400" height="165" alt="Top Languages"/>
   </a>
 </div>
 
