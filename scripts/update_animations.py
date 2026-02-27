@@ -11,6 +11,7 @@ USER = os.environ.get("GITHUB_REPOSITORY_OWNER", "skillparty")
 HEADERS = {"Authorization": f"Bearer {GITHUB_TOKEN}"} if GITHUB_TOKEN else {}
 
 def fetch_contributions():
+    """Returns (grid, streak_info) where streak_info = {current, longest, total}"""
     if not GITHUB_TOKEN:
         print("No GITHUB_TOKEN provided, falling back to simulated data.")
         return simulate_contributions()
@@ -70,11 +71,45 @@ def simulate_contributions():
                 elif w < 0.78: col.append(3)
                 else: col.append(4)
         grid.append(col)
-    return grid
+    return grid, {"current": random.randint(3, 15), "longest": random.randint(20, 60), "total": random.randint(400, 1200)}
+
+def calculate_streaks(weeks_data):
+    """Calculate current streak, longest streak, and total contributions from raw weeks data."""
+    all_days = []
+    for w in weeks_data:
+        for d in w["contributionDays"]:
+            all_days.append({"count": d["contributionCount"], "date": d["date"]})
+    
+    total = sum(d["count"] for d in all_days)
+    
+    # Calculate streaks
+    current_streak = 0
+    longest_streak = 0
+    streak = 0
+    
+    for d in all_days:
+        if d["count"] > 0:
+            streak += 1
+            longest_streak = max(longest_streak, streak)
+        else:
+            streak = 0
+    
+    # Current streak: count backwards from today
+    for d in reversed(all_days):
+        if d["count"] > 0:
+            current_streak += 1
+        else:
+            break
+    
+    return {"current": current_streak, "longest": longest_streak, "total": total}
 
 def process_github_contribs(data):
     try:
-        weeks = data["data"]["user"]["contributionsCollection"]["contributionCalendar"]["weeks"]
+        calendar = data["data"]["user"]["contributionsCollection"]["contributionCalendar"]
+        weeks = calendar["weeks"]
+        
+        streak_info = calculate_streaks(weeks)
+        
         days = []
         for w in weeks:
             for d in w["contributionDays"]:
@@ -98,13 +133,13 @@ def process_github_contribs(data):
         for i in range(42):
             start = i * 7
             grid.append(days[start:start+7])
-        return grid
+        return grid, streak_info
     except Exception as e:
         print(f"Error parsing contributions: {e}")
         traceback.print_exc()
         return simulate_contributions()
 
-def generate_black_hole_svg(grid):
+def generate_black_hole_svg(grid, streak_info):
     COLS, ROWS = 42, 7
     BLOCK, CELL = 14, 24
     GRID_X, GRID_Y = 100, 72
@@ -317,12 +352,26 @@ def generate_black_hole_svg(grid):
     </circle>
   </g>
 
+  <!-- Streak HUD -->
+  <g filter="url(#glow)">
+    <text x="100" y="255" font-family="ui-monospace,SFMono-Regular,Menlo,monospace" font-size="9" fill="#7C3AED" opacity="0.7">
+      STREAK: {streak_info["current"]}d
+      <animate attributeName="opacity" values="0.5;0.9;0.5" dur="2s" repeatCount="indefinite"/>
+    </text>
+    <text x="230" y="255" font-family="ui-monospace,SFMono-Regular,Menlo,monospace" font-size="9" fill="#9333EA" opacity="0.6">
+      LONGEST: {streak_info["longest"]}d
+    </text>
+    <text x="380" y="255" font-family="ui-monospace,SFMono-Regular,Menlo,monospace" font-size="9" fill="#00FFFF" opacity="0.6">
+      TOTAL: {streak_info["total"]}
+    </text>
+  </g>
+
   <!-- Bottom HUD -->
   <g filter="url(#glitch)">
-    <text x="100" y="270" font-family="ui-monospace,SFMono-Regular,Menlo,monospace" font-size="10" fill="#00FF41" opacity="0.7" filter="url(#glow)">
+    <text x="100" y="275" font-family="ui-monospace,SFMono-Regular,Menlo,monospace" font-size="10" fill="#00FF41" opacity="0.7" filter="url(#glow)">
       [SINGULARITY ACTIVE] [absorption: 100%] [regeneration: ENABLED]
     </text>
-    <text x="720" y="270" font-family="ui-monospace,SFMono-Regular,Menlo,monospace" font-size="10" fill="#00FFFF" opacity="0.5" filter="url(#glow)">
+    <text x="720" y="275" font-family="ui-monospace,SFMono-Regular,Menlo,monospace" font-size="10" fill="#00FFFF" opacity="0.5" filter="url(#glow)">
       UPTD: {timestamp}
     </text>
   </g>
@@ -470,15 +519,137 @@ def generate_cyber_langs(langs, last_repo):
     with open("dist/cyber-langs.svg", "w") as f:
         f.write(svg)
 
+def generate_header_svg():
+    """Generate a cyberpunk typing-effect header SVG."""
+    W, H = 900, 120
+    
+    lines = [
+        f"Jose Alejandro Rollano",
+        "Freelance Software Developer",
+        "Bolivia // Next.js · Flutter · Python · Cloud",
+    ]
+    
+    # Build typing animation for each line
+    typing_elements = []
+    for i, line in enumerate(lines):
+        y = 38 + i * 28
+        delay = i * 2.0
+        total_dur = len(line) * 0.06
+        
+        if i == 0:
+            font_size = 22
+            color = "#00FFFF"
+            opacity = 0.95
+        elif i == 1:
+            font_size = 14
+            color = "#00FF41"
+            opacity = 0.8
+        else:
+            font_size = 11
+            color = "#7C3AED"
+            opacity = 0.7
+        
+        # Each character appears one by one
+        char_elements = []
+        for j, ch in enumerate(line):
+            char_delay = round(delay + j * 0.06, 2)
+            escaped = ch.replace('&', '&amp;').replace('<', '&lt;').replace('>', '&gt;')
+            if ch == ' ':
+                escaped = '&#160;'
+            char_elements.append(
+                f'<tspan opacity="0">'
+                f'{escaped}'
+                f'<animate attributeName="opacity" from="0" to="1" dur="0.05s" begin="{char_delay}s" fill="freeze"/>'
+                f'</tspan>'
+            )
+        
+        char_svg = ''.join(char_elements)
+        
+        # Blinking cursor after the line
+        cursor_x_approx = 60 + len(line) * (font_size * 0.6)
+        cursor_appear = round(delay + len(line) * 0.06, 2)
+        cursor_disappear = round(delay + len(line) * 0.06 + 1.5, 2) if i < len(lines) - 1 else None
+        
+        typing_elements.append(
+            f'  <text x="60" y="{y}" font-family="ui-monospace,SFMono-Regular,Menlo,monospace" '
+            f'font-size="{font_size}" fill="{color}" opacity="{opacity}" filter="url(#glow)">'
+            f'{char_svg}'
+            f'</text>'
+        )
+        
+        # Cursor
+        if i == len(lines) - 1:
+            typing_elements.append(
+                f'  <rect x="{min(cursor_x_approx, W - 60)}" y="{y - font_size + 4}" width="{font_size * 0.55}" height="{font_size}" fill="{color}" opacity="0">'
+                f'    <animate attributeName="opacity" values="0;0;0.8;0.8;0;0.8;0.8;0" '
+                f'keyTimes="0;{cursor_appear/10};{cursor_appear/10 + 0.01};{(cursor_appear + 0.5)/10};{(cursor_appear + 0.5)/10 + 0.01};{(cursor_appear + 1)/10};{(cursor_appear + 1)/10 + 0.01};1" '
+                f'dur="10s" fill="freeze"/>'
+                f'  </rect>'
+            )
+    
+    typing_svg = '\n'.join(typing_elements)
+    
+    # Scanline horizontal
+    timestamp = datetime.now().strftime("%Y-%m-%d")
+    
+    svg = f'''<svg width="{W}" height="{H}" viewBox="0 0 {W} {H}" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <filter id="glow">
+      <feGaussianBlur stdDeviation="1.5" result="b"/>
+      <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+    <filter id="glitch">
+      <feOffset in="SourceGraphic" dx="2" dy="0" result="r">
+        <animate attributeName="dx" values="0;3;-2;0;1;-1;0" dur="0.3s" begin="6s" repeatCount="3"/>
+      </feOffset>
+      <feOffset in="SourceGraphic" dx="-2" dy="0" result="b">
+        <animate attributeName="dx" values="0;-3;2;0;-1;1;0" dur="0.3s" begin="6s" repeatCount="3"/>
+      </feOffset>
+      <feColorMatrix in="r" type="matrix" values="1 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 1 0" result="red"/>
+      <feColorMatrix in="b" type="matrix" values="0 0 0 0 0  0 0 0 0 0  0 0 1 0 0  0 0 0 1 0" result="blue"/>
+      <feBlend in="red" in2="blue" mode="screen" result="glitched"/>
+      <feBlend in="SourceGraphic" in2="glitched" mode="normal"/>
+    </filter>
+  </defs>
+
+  <rect width="{W}" height="{H}" rx="10" fill="#0A0A0A" stroke="#1B2838" stroke-width="1"/>
+
+  <!-- Terminal prompt -->
+  <text x="20" y="17" font-family="ui-monospace,SFMono-Regular,Menlo,monospace" font-size="9" fill="#00FF41" opacity="0.4">
+    root@{USER}:~$ cat /etc/identity.conf
+  </text>
+
+  <!-- Typing content -->
+  <g filter="url(#glitch)">
+{typing_svg}
+  </g>
+
+  <!-- Bottom status bar -->
+  <line x1="20" y1="{H - 18}" x2="{W - 20}" y2="{H - 18}" stroke="#00FFFF" stroke-width="0.5" opacity="0.2"/>
+  <circle cx="30" cy="{H - 9}" r="3" fill="#00FF41" filter="url(#glow)">
+    <animate attributeName="opacity" values="1;0.3;1" dur="1.5s" repeatCount="indefinite"/>
+  </circle>
+  <text x="40" y="{H - 5}" font-family="ui-monospace,SFMono-Regular,Menlo,monospace" font-size="8" fill="#475569" opacity="0.6">
+    SESSION ACTIVE // {timestamp} // github.com/{USER}
+  </text>
+</svg>'''
+    
+    with open("dist/header-typing.svg", "w") as f:
+        f.write(svg)
+
 os.makedirs("dist", exist_ok=True)
 print(f"User: {USER}")
 print(f"Token present: {bool(GITHUB_TOKEN)}")
 
 try:
+    print("Generating Header SVG...")
+    generate_header_svg()
+
     print("Fetching contributions...")
-    grid = fetch_contributions()
+    grid, streak_info = fetch_contributions()
+    print(f"Streak info: {streak_info}")
     print("Generating Matrix SVG...")
-    generate_black_hole_svg(grid)
+    generate_black_hole_svg(grid, streak_info)
 
     print("Fetching Languages...")
     langs, last_repo = fetch_languages()

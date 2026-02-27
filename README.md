@@ -1,8 +1,9 @@
 <div align="center">
 
-  <img src="https://readme-typing-svg.demolab.com?font=Fira+Code&weight=700&size=24&duration=3000&pause=1000&color=22D3EE&center=true&vCenter=true&width=500&height=35&lines=SkillParty+%7C+Creative+Dev+Studio" alt="Typing SVG" />
+  <!-- Animated Typing Header (auto-generated) -->
+  <img src="https://github.com/skillparty/skillparty/blob/output/header-typing.svg?raw=true" alt="Header" width="900" />
 
-  <br/>
+  <br/><br/>
 
   ![JavaScript](https://img.shields.io/badge/JavaScript-F7DF1E?style=for-the-badge&logo=javascript&logoColor=black)
   ![TypeScript](https://img.shields.io/badge/TypeScript-3178C6?style=for-the-badge&logo=typescript&logoColor=white)
@@ -10,8 +11,29 @@
   ![Next.js](https://img.shields.io/badge/Next.js-000000?style=for-the-badge&logo=nextdotjs&logoColor=white)
   ![Flutter](https://img.shields.io/badge/Flutter-02569B?style=for-the-badge&logo=flutter&logoColor=white)
   ![React](https://img.shields.io/badge/React-61DAFB?style=for-the-badge&logo=react&logoColor=black)
+  ![Dart](https://img.shields.io/badge/Dart-0175C2?style=for-the-badge&logo=dart&logoColor=white)
+  ![Node.js](https://img.shields.io/badge/Node.js-339933?style=for-the-badge&logo=nodedotjs&logoColor=white)
+  ![Firebase](https://img.shields.io/badge/Firebase-FFCA28?style=for-the-badge&logo=firebase&logoColor=black)
+  ![Vercel](https://img.shields.io/badge/Vercel-000000?style=for-the-badge&logo=vercel&logoColor=white)
 
 </div>
+
+---
+
+### `> whoami`
+
+```
+Jose Alejandro Rollano Revollo
+Location:   Cochabamba, Bolivia
+Role:       Freelance Software Developer
+Focus:      Web apps, mobile, cloud, SEO
+Stack:      Next.js App Router · Flutter · Python · Firebase
+Currently:  Exploring AI integrations & edge computing
+```
+
+---
+
+### `> cat /proc/contributions`
 
 <div align="center">
   <img src="https://github.com/skillparty/skillparty/blob/output/contribution-matrix.svg?raw=true" alt="Contribution Matrix" width="100%" />
@@ -19,7 +41,7 @@
 
 ---
 
-### 📊 Stats
+### `> systemctl status languages`
 
 <div align="center">
   <img src="https://github.com/skillparty/skillparty/blob/output/cyber-langs.svg?raw=true" alt="Cyberpunk Languages Stats" width="500" />
@@ -33,12 +55,13 @@
 
 ---
 
+### `> ping social_networks`
+
 <div align="center">
 
   [![GitHub](https://img.shields.io/badge/GitHub-skillparty-181717?style=flat-square&logo=github)](https://github.com/skillparty)
-  ![Repos](https://img.shields.io/badge/Repos-36-22D3EE?style=flat-square&logo=git&logoColor=white)
+  ![Repos](https://img.shields.io/badge/Repos-28-22D3EE?style=flat-square&logo=git&logoColor=white)
   ![Followers](https://img.shields.io/badge/Followers-5-A78BFA?style=flat-square&logo=github)
-  ![Stars](https://img.shields.io/badge/Stars-13-F59E0B?style=flat-square&logo=github)
 
   <br/>
 
