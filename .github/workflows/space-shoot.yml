@@ -1,15 +1,16 @@
-name: Generate Contribution Animation
+name: Generate Profile Space Animation
 
 on:
-  # Se ejecuta automáticamente cada 24 horas a la medianoche
   schedule:
-    - cron: "0 0 * * *"
-  # Permite ejecutarlo manualmente desde la pestaña Actions
+    - cron: "0 */8 * * *"
   workflow_dispatch:
-  # Se actualiza con cada push a la rama main
   push:
     branches:
-    - main
+      - main
+
+concurrency:
+  group: profile-animation
+  cancel-in-progress: true
 
 jobs:
   build:
@@ -17,27 +18,23 @@ jobs:
     permissions:
       contents: write
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       
-      # Genera la animación destruyendo el grafo
-      - name: Generate Space Ship/Snake Animation
+      - name: Generate contribution animation
         uses: Platane/snk@v3
         with:
-          # Usuario de Github cuyo grafo se leerá
           github_user_name: skillparty
-          # Dónde se guardarán los GIFs/SVGs de la animación
           outputs: |
-            dist/github-contribution-grid-snake.svg
+            dist/github-contribution-grid-snake.svg?palette=github-light
             dist/github-contribution-grid-snake-dark.svg?palette=github-dark
-            dist/github-contribution-grid-snake.gif?color_snake=orange&color_dots=#bfd6f6,#8dbdff,#64a1f4,#4b91f1,#3c7dd9
+            dist/github-contribution-grid-snake.gif?color_snake=#22D3EE&color_dots=#0B1020,#13223C,#1E3A8A,#2563EB,#38BDF8
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      # Sube los archivos generados a una rama separada llamada 'output'
-      - name: Push Animation to Output Branch
-        uses: crazy-max/ghaction-github-pages@v3.1.0
+      - name: Publish animation assets
+        uses: peaceiris/actions-gh-pages@v4
         with:
-          target_branch: output
-          build_dir: dist
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_branch: output
+          publish_dir: dist
+          force_orphan: true
