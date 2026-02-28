@@ -2,6 +2,10 @@
 
   <!-- Animated Typing Header (auto-generated) -->
   <img src="https://github.com/skillparty/skillparty/blob/output/header-typing.svg?raw=true" alt="Header" width="900" />
+  
+  <br/>
+  
+  <img src="https://github.com/skillparty/skillparty/blob/output/ascii-art.svg?raw=true" alt="Skillparty ASCII" width="600" />
 
   <br/><br/>
 
@@ -45,6 +49,14 @@ Currently:  Exploring AI integrations & edge computing
 
 <div align="center">
   <img src="https://github.com/skillparty/skillparty/blob/output/cyber-langs.svg?raw=true" alt="Cyberpunk Languages Stats" width="500" />
+</div>
+
+---
+
+### `> ./generate_fractal --type=tree`
+
+<div align="center">
+  <img src="https://github.com/skillparty/skillparty/blob/output/fractal.svg?raw=true" alt="Fractal Tree" width="600" />
 </div>
 
 <div align="center">

@@ -3,7 +3,15 @@ import requests
 import json
 import random
 import traceback
+import math
+import textwrap
+from pathlib import Path
+from dotenv import load_dotenv
 from datetime import datetime, timedelta
+
+# Load .env from the project root (one level up from scripts/)
+env_path = Path(__file__).resolve().parent.parent / '.env'
+load_dotenv(dotenv_path=env_path)
 
 GITHUB_TOKEN = os.environ.get("GITHUB_TOKEN")
 USER = os.environ.get("GITHUB_REPOSITORY_OWNER", "skillparty")
@@ -594,6 +602,90 @@ def generate_cyber_langs(langs, last_repo):
     with open("dist/cyber-langs.svg", "w") as f:
         f.write(svg)
 
+def generate_ascii_art_svg():
+    """Generates an SVG with the ASCII art name 'skillparty'."""
+    W, H = 600, 150
+    
+    # ASCII Art for "skillparty"
+    ascii_art = [
+        r"  ___  _    _  _  _  ___              _            ",
+        r" / __|| |__(_)| || || _ \ __ _  _ _ | |_  _  _   ",
+        r" \__ \| / /| || || ||  _// _` || '_||  _|| || |  ",
+        r" |___/|_\_\|_||_||_||_|  \__,_||_|   \__| \_, |  ",
+        r"                                          |__/   "
+    ]
+    
+    lines_svg = []
+    for i, line in enumerate(ascii_art):
+        y = 30 + i * 18
+        # Add a glow effect and gradient fill
+        lines_svg.append(
+            f'<text x="50%" y="{y}" text-anchor="middle" font-family="monospace" font-size="14" fill="#00FF41" opacity="0">{line}'
+            f'<animate attributeName="opacity" from="0" to="1" dur="0.5s" begin="{i*0.2}s" fill="freeze" />'
+            f'<animate attributeName="fill" values="#00FF41;#00FFFF;#00FF41" dur="4s" repeatCount="indefinite" />'
+            f'</text>'
+        )
+
+    svg = f'''<svg width="{W}" height="{H}" viewBox="0 0 {W} {H}" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <rect width="{W}" height="{H}" rx="10" fill="#0d1117" />
+    <g style="white-space: pre;">
+        {''.join(lines_svg)}
+    </g>
+    </svg>'''
+    
+    with open("dist/ascii-art.svg", "w") as f:
+        f.write(svg)
+
+def generate_fractal_svg():
+    """Generates a Pythagorean Tree fractal SVG."""
+    W, H = 600, 400
+    
+    lines = []
+    
+    def draw_branch(x, y, length, angle, depth, max_depth):
+        if depth > max_depth:
+            return
+        
+        x2 = x - length * math.sin(math.radians(angle))
+        y2 = y - length * math.cos(math.radians(angle))
+        
+        color_ratio = depth / max_depth
+        r = int(0 + color_ratio * 124)   # 0 -> 7C
+        g = int(255 - color_ratio * 50)  # 255 -> ?
+        b = int(65 + color_ratio * 190)  # 41 -> FF
+        color = f"#{r:02x}{g:02x}{b:02x}"
+        
+        stroke_width = max(1, (max_depth - depth))
+        
+        lines.append(f'<line x1="{x:.1f}" y1="{y:.1f}" x2="{x2:.1f}" y2="{y2:.1f}" stroke="{color}" stroke-width="{stroke_width}" opacity="0.8" />')
+        
+        new_length = length * 0.8
+        draw_branch(x2, y2, new_length, angle + 30, depth + 1, max_depth)
+        draw_branch(x2, y2, new_length, angle - 30, depth + 1, max_depth)
+
+    # Start the tree from bottom center
+    draw_branch(W/2, H-20, 80, 0, 0, 10)
+    
+    svg = f'''<svg width="{W}" height="{H}" viewBox="0 0 {W} {H}" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <rect width="{W}" height="{H}" rx="10" fill="#0d1117" />
+    <text x="20" y="30" fill="#00FF41" font-family="monospace" font-size="12">./generate_fractal --type=tree</text>
+    <g filter="url(#glow)">
+        {''.join(lines)}
+    </g>
+    <defs>
+        <filter id="glow">
+            <feGaussianBlur stdDeviation="1.5" result="coloredBlur"/>
+            <feMerge>
+                <feMergeNode in="coloredBlur"/>
+                <feMergeNode in="SourceGraphic"/>
+            </feMerge>
+        </filter>
+    </defs>
+    </svg>'''
+    
+    with open("dist/fractal.svg", "w") as f:
+        f.write(svg)
+
 def generate_header_svg():
     """Generate a cyberpunk typing-effect header SVG."""
     W, H = 900, 120
@@ -728,6 +820,12 @@ if GITHUB_TOKEN:
 data_source = {"contributions": "unknown", "languages": "unknown"}
 
 try:
+    print("Generating ASCII Art SVG...")
+    generate_ascii_art_svg()
+
+    print("Generating Fractal SVG...")
+    generate_fractal_svg()
+
     print("Generating Header SVG...")
     generate_header_svg()
 
