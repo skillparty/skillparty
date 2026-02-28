@@ -6,12 +6,20 @@ import traceback
 import math
 import textwrap
 from pathlib import Path
-from dotenv import load_dotenv
 from datetime import datetime, timedelta
+
+try:
+    from dotenv import load_dotenv
+except ImportError:
+    load_dotenv = None
 
 # Load .env from the project root (one level up from scripts/)
 env_path = Path(__file__).resolve().parent.parent / '.env'
-load_dotenv(dotenv_path=env_path)
+if load_dotenv and env_path.exists():
+    load_dotenv(dotenv_path=env_path)
+    print(f"Loaded .env from {env_path}")
+else:
+    print("Skipping .env load (file not found or dotenv missing)")
 
 GITHUB_TOKEN = os.environ.get("GITHUB_TOKEN")
 USER = os.environ.get("GITHUB_REPOSITORY_OWNER", "skillparty")
