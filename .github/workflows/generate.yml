@@ -1,46 +1,64 @@
-name: Generate Cyber Animations
+name: Generate Profile Assets
 
 on:
   schedule:
-    - cron: "0 */12 * * *" # Runs every 12 hours
+    - cron: "0 */12 * * *"
   workflow_dispatch:
   push:
     branches:
       - main
+
+concurrency:
+  group: profile-assets
+  cancel-in-progress: true
 
 jobs:
   generate:
     runs-on: ubuntu-latest
     permissions:
       contents: write
-      
+
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
 
+      # ── Step 1: Generate custom SVGs (header, matrix, langs, fractal, ascii) ──
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
-          python-version: '3.10'
+          python-version: '3.12'
           cache: 'pip'
 
-      - name: Install dependencies
+      - name: Install Python dependencies
         run: pip install -r requirements.txt
 
-      - name: Run script to generate SVGs
+      - name: Generate custom SVGs
         env:
           GITHUB_TOKEN: ${{ secrets.GH_PAT }}
         run: python scripts/update_animations.py
 
+      # ── Step 2: Generate contribution snake animation ──
+      - name: Generate snake animation
+        uses: Platane/snk@v3
+        with:
+          github_user_name: skillparty
+          outputs: |
+            dist/github-contribution-grid-snake.svg?palette=github-light
+            dist/github-contribution-grid-snake-dark.svg?palette=github-dark
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      # ── Step 3: Verify all assets ──
       - name: Verify generated files
         run: |
-          echo "Generated files:"
+          echo "=== Generated Assets ==="
           ls -la dist/
-          echo "---"
-          echo "Header SVG size: $(wc -c < dist/header-typing.svg) bytes"
-          echo "Matrix SVG size: $(wc -c < dist/contribution-matrix.svg) bytes"
-          echo "Langs SVG size: $(wc -c < dist/cyber-langs.svg) bytes"
+          echo ""
+          for f in dist/*.svg; do
+            echo "$(basename $f): $(wc -c < $f) bytes"
+          done
 
+      # ── Step 4: Publish everything to output branch ──
       - name: Publish to output branch
         uses: peaceiris/actions-gh-pages@v4
         with:
@@ -48,4 +66,4 @@ jobs:
           publish_branch: output
           publish_dir: ./dist
           force_orphan: true
-          commit_message: "chore: update cyber animations [skip ci]"
+          commit_message: "chore: update profile assets [skip ci]"
