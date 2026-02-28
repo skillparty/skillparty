@@ -1,11 +1,11 @@
 <div align="center">
 
   <!-- Animated Typing Header (auto-generated) -->
-  <img src="https://github.com/skillparty/skillparty/blob/output/header-typing.svg?raw=true" alt="Header" width="900" />
+  <img src="https://raw.githubusercontent.com/skillparty/skillparty/output/header-typing.svg" alt="Header" width="900" />
   
   <br/>
   
-  <img src="https://github.com/skillparty/skillparty/blob/output/ascii-art.svg?raw=true" alt="Skillparty ASCII" width="600" />
+  <img src="https://raw.githubusercontent.com/skillparty/skillparty/output/ascii-art.svg" alt="Skillparty ASCII" width="600" />
 
   <br/><br/>
 
@@ -40,7 +40,7 @@ Currently:  Exploring AI integrations & edge computing
 ### `> cat /proc/contributions`
 
 <div align="center">
-  <img src="https://github.com/skillparty/skillparty/blob/output/contribution-matrix.svg?raw=true" alt="Contribution Matrix" width="100%" />
+  <img src="https://raw.githubusercontent.com/skillparty/skillparty/output/contribution-matrix.svg" alt="Contribution Matrix" width="100%" />
 </div>
 
 ---
@@ -48,7 +48,7 @@ Currently:  Exploring AI integrations & edge computing
 ### `> systemctl status languages`
 
 <div align="center">
-  <img src="https://github.com/skillparty/skillparty/blob/output/cyber-langs.svg?raw=true" alt="Cyberpunk Languages Stats" width="500" />
+  <img src="https://raw.githubusercontent.com/skillparty/skillparty/output/cyber-langs.svg" alt="Cyberpunk Languages Stats" width="500" />
 </div>
 
 ---
@@ -56,7 +56,7 @@ Currently:  Exploring AI integrations & edge computing
 ### `> ./generate_fractal --type=tree`
 
 <div align="center">
-  <img src="https://github.com/skillparty/skillparty/blob/output/fractal.svg?raw=true" alt="Fractal Tree" width="600" />
+  <img src="https://raw.githubusercontent.com/skillparty/skillparty/output/fractal.svg" alt="Fractal Tree" width="600" />
 </div>
 
 <div align="center">
