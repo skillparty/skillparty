@@ -32,6 +32,15 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GH_PAT }}
         run: python scripts/update_animations.py
 
+      - name: Verify generated files
+        run: |
+          echo "Generated files:"
+          ls -la dist/
+          echo "---"
+          echo "Header SVG size: $(wc -c < dist/header-typing.svg) bytes"
+          echo "Matrix SVG size: $(wc -c < dist/contribution-matrix.svg) bytes"
+          echo "Langs SVG size: $(wc -c < dist/cyber-langs.svg) bytes"
+
       - name: Publish to output branch
         uses: peaceiris/actions-gh-pages@v4
         with:

@@ -640,6 +640,17 @@ def generate_header_svg():
 os.makedirs("dist", exist_ok=True)
 print(f"User: {USER}")
 print(f"Token present: {bool(GITHUB_TOKEN)}")
+if GITHUB_TOKEN:
+    print(f"Token starts with: {GITHUB_TOKEN[:8]}...")
+    # Quick auth test
+    test_r = requests.get("https://api.github.com/user", headers=HEADERS)
+    print(f"Auth test: {test_r.status_code}")
+    if test_r.status_code == 200:
+        print(f"Authenticated as: {test_r.json().get('login')}")
+    else:
+        print(f"Auth failed: {test_r.text[:200]}")
+
+data_source = {"contributions": "unknown", "languages": "unknown"}
 
 try:
     print("Generating Header SVG...")
@@ -647,15 +658,23 @@ try:
 
     print("Fetching contributions...")
     grid, streak_info = fetch_contributions()
+    data_source["contributions"] = "REAL" if GITHUB_TOKEN else "SIMULATED"
     print(f"Streak info: {streak_info}")
+    print(f"Contributions source: {data_source['contributions']}")
     print("Generating Matrix SVG...")
     generate_black_hole_svg(grid, streak_info)
 
     print("Fetching Languages...")
     langs, last_repo = fetch_languages()
+    data_source["languages"] = "REAL" if GITHUB_TOKEN else "SIMULATED"
+    print(f"Languages source: {data_source['languages']}")
+    print(f"Languages: {[l['name'] for l in langs]}")
     print("Generating Cyber Langs SVG...")
     generate_cyber_langs(langs, last_repo)
 
+    print(f"\n=== SUMMARY ===")
+    print(f"Contributions: {data_source['contributions']}")
+    print(f"Languages: {data_source['languages']}")
     print("Done! Artifacts saved to dist/")
 except Exception as e:
     print(f"FATAL ERROR: {e}")
