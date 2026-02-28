@@ -164,22 +164,86 @@ def generate_black_hole_svg(grid, streak_info):
             cx = GRID_X + c * CELL + BLOCK // 2
             cy = GRID_Y + r * CELL + BLOCK // 2
             color = COLORS[val]
+            
+            # Calculate vertical pull toward black hole path
+            dy = BH_Y - cy  # positive = below, negative = above
+            # Absorption pull distance (how far the square travels toward BH)
+            pull_y = round(dy * 0.85, 1)
+            # Slight horizontal pull (toward where BH will be - ahead of the square)
+            pull_x = round(15 + (c % 5) * 2, 1)
 
             grid_lines.append(f'    <g transform="translate({cx},{cy})">')
             grid_lines.append(f'      <rect x="-7" y="-7" width="14" height="14" rx="3" fill="{color}">')
+            
+            # 1) TRANSLATE: Pull toward BH vertically + slight horizontal drift
+            grid_lines.append(
+                f'        <animateTransform attributeName="transform" type="translate"'
+                f' values="0 0;0 0;{pull_x} {pull_y};{pull_x} {pull_y};0 0;0 0"'
+                f' keyTimes="0;0.03;0.08;0.48;0.58;0.64"'
+                f' dur="{DUR}s" begin="{delay}s" repeatCount="indefinite"'
+                f' additive="sum"/>'
+            )
+            
+            # 2) SCALE: Stretch vertically (spaghettification) then collapse
+            stretch_dir = "1 1;1.2 1.4;0.3 2.5;0 0;0 0;0.5 0.5;1 1" if abs(dy) > 30 else "1 1;1.3 1.3;0.2 1.8;0 0;0 0;0.5 0.5;1 1"
             grid_lines.append(
                 f'        <animateTransform attributeName="transform" type="scale"'
-                f' values="1;1.3;0;0;0.3;1;1"'
-                f' keyTimes="0;0.03;0.09;0.48;0.56;0.64;1"'
-                f' dur="{DUR}s" begin="{delay}s" repeatCount="indefinite"/>'
+                f' values="{stretch_dir}"'
+                f' keyTimes="0;0.03;0.07;0.09;0.48;0.56;0.64"'
+                f' dur="{DUR}s" begin="{delay}s" repeatCount="indefinite"'
+                f' additive="sum"/>'
             )
+            
+            # 3) ROTATE: Spin as it gets sucked in
+            spin_dir = 360 if (c + r) % 2 == 0 else -360
+            grid_lines.append(
+                f'        <animateTransform attributeName="transform" type="rotate"'
+                f' values="0;0;{spin_dir};{spin_dir};{spin_dir};0;0"'
+                f' keyTimes="0;0.03;0.09;0.48;0.56;0.64;1"'
+                f' dur="{DUR}s" begin="{delay}s" repeatCount="indefinite"'
+                f' additive="sum"/>'
+            )
+            
+            # 4) OPACITY: Fade with glow pulse before absorption
             grid_lines.append(
                 f'        <animate attributeName="opacity"'
-                f' values="1;1;0;0;0.3;1;1"'
-                f' keyTimes="0;0.03;0.09;0.48;0.56;0.64;1"'
+                f' values="1;1;0.8;0;0;0.1;0.5;1"'
+                f' keyTimes="0;0.02;0.05;0.09;0.48;0.54;0.60;0.66"'
                 f' dur="{DUR}s" begin="{delay}s" repeatCount="indefinite"/>'
             )
+            
+            # 5) COLOR SHIFT: Turn purple/cyan as gravitational lensing kicks in
+            if val > 0:
+                grid_lines.append(
+                    f'        <animate attributeName="fill"'
+                    f' values="{color};{color};#A855F7;#7C3AED;#7C3AED;#A855F7;{color};{color}"'
+                    f' keyTimes="0;0.02;0.05;0.09;0.48;0.54;0.60;0.66"'
+                    f' dur="{DUR}s" begin="{delay}s" repeatCount="indefinite"/>'
+                )
+            
             grid_lines.append(f'      </rect>')
+            
+            # 6) ABSORPTION PARTICLES: Small dots flying toward BH path
+            if val > 0:
+                for p in range(2):
+                    p_offset_x = random.randint(-5, 5)
+                    p_offset_y = random.randint(-5, 5)
+                    particle_delay = round(delay + 0.03 * DUR + p * 0.3, 2)
+                    p_color = "#A855F7" if p == 0 else "#00FFFF"
+                    p_size = 2 if p == 0 else 1.5
+                    grid_lines.append(
+                        f'      <circle cx="{p_offset_x}" cy="{p_offset_y}" r="{p_size}" fill="{p_color}" opacity="0">'
+                        f'        <animate attributeName="opacity" values="0;0.9;0.6;0" keyTimes="0;0.1;0.7;1"'
+                        f' dur="1.2s" begin="{particle_delay}s" repeatCount="indefinite"/>'
+                        f'        <animate attributeName="cx" values="{p_offset_x};{pull_x * 1.5}" dur="1.2s"'
+                        f' begin="{particle_delay}s" repeatCount="indefinite"/>'
+                        f'        <animate attributeName="cy" values="{p_offset_y};{pull_y}" dur="1.2s"'
+                        f' begin="{particle_delay}s" repeatCount="indefinite"/>'
+                        f'        <animate attributeName="r" values="{p_size};0.5;0" keyTimes="0;0.7;1"'
+                        f' dur="1.2s" begin="{particle_delay}s" repeatCount="indefinite"/>'
+                        f'      </circle>'
+                    )
+            
             grid_lines.append(f'    </g>')
             
     grid_svg = "\\n".join(grid_lines)
@@ -328,6 +392,17 @@ def generate_black_hole_svg(grid, streak_info):
   <g>
     <animateTransform attributeName="transform" type="translate"
       values="-50 {BH_Y};1250 {BH_Y}" dur="{DUR}s" repeatCount="indefinite"/>
+    
+    <!-- Gravitational distortion waves -->
+    <circle r="110" fill="none" stroke="#7C3AED" stroke-width="0.8" opacity="0" filter="url(#glowStrong)">
+      <animate attributeName="r" values="40;120;120" dur="2s" repeatCount="indefinite"/>
+      <animate attributeName="opacity" values="0.5;0.1;0" dur="2s" repeatCount="indefinite"/>
+    </circle>
+    <circle r="80" fill="none" stroke="#00FFFF" stroke-width="0.5" opacity="0" filter="url(#glow)">
+      <animate attributeName="r" values="30;100;100" dur="2.5s" repeatCount="indefinite"/>
+      <animate attributeName="opacity" values="0.3;0.05;0" dur="2.5s" repeatCount="indefinite"/>
+    </circle>
+    
     <circle r="90" fill="url(#bhGlow)" opacity="0.5" filter="url(#glowHeavy)">
       <animate attributeName="r" values="80;95;80" dur="3s" repeatCount="indefinite"/>
       <animate attributeName="opacity" values="0.4;0.6;0.4" dur="3s" repeatCount="indefinite"/>
