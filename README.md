@@ -1,12 +1,16 @@
+```
+        __   __ __  __                 __      
+  ___  / /_ (_)/ // /  ___  ___ _ ____/ /_ __ __
+ (_-< /  '_// // // /  / _ \/ _ `// __/ __// // /
+/___//_/\_\/_//_//_/  / .__/\_,_//_/  \__/ \_, / 
+                     /_/                  /___/  
+```
+
 <div align="center">
 
   <a href="https://github.com/skillparty">
-    <img src="https://readme-typing-svg.demolab.com?font=Fira+Code&weight=500&size=22&duration=3000&pause=1500&color=C9D1D9&center=true&vCenter=true&repeat=true&width=500&height=45&lines=%24+whoami+--verbose;Jose+Alejandro+Rollano;Full+Stack+Developer+%C2%B7+Bolivia" alt="Typing SVG" />
+    <img src="https://readme-typing-svg.demolab.com?font=Fira+Code&weight=400&size=16&duration=3000&pause=1500&color=8b949e&center=true&vCenter=true&repeat=true&width=400&height=30&lines=Full+Stack+Developer+%C2%B7+Bolivia+%F0%9F%87%A7%F0%9F%87%B4;Next.js+%C2%B7+Flutter+%C2%B7+Python+%C2%B7+Firebase" alt="Typing SVG" />
   </a>
-
-  <br/>
-
-  <img src="https://raw.githubusercontent.com/skillparty/skillparty/output/header-typing.svg" alt="Header" width="800" />
 
   <br/><br/>
 
