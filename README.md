@@ -44,10 +44,10 @@ Stack      Next.js · Flutter · Python · Firebase
 
 <div align="center">
   <a href="https://github.com/skillparty">
-    <img height="165" src="https://github-readme-stats.vercel.app/api?username=skillparty&show_icons=true&bg_color=00000000&hide_border=true&icon_color=58a6ff&title_color=c9d1d9&text_color=8b949e&include_all_commits=true&count_private=true" alt="Stats"/>
+    <img height="165" src="https://github-readme-stats-sigma-five.vercel.app/api?username=skillparty&show_icons=true&bg_color=00000000&hide_border=true&icon_color=58a6ff&title_color=c9d1d9&text_color=8b949e&include_all_commits=true&count_private=true" alt="Stats"/>
   </a>
   <a href="https://github.com/skillparty">
-    <img height="165" src="https://github-readme-stats.vercel.app/api/top-langs/?username=skillparty&layout=compact&bg_color=00000000&hide_border=true&title_color=c9d1d9&text_color=8b949e&langs_count=6" alt="Languages"/>
+    <img height="165" src="https://github-readme-stats-sigma-five.vercel.app/api/top-langs/?username=skillparty&layout=compact&bg_color=00000000&hide_border=true&title_color=c9d1d9&text_color=8b949e&langs_count=6" alt="Languages"/>
   </a>
 </div>
 
@@ -81,10 +81,10 @@ Stack      Next.js · Flutter · Python · Firebase
 
 <div align="center">
   <a href="https://github.com/skillparty/tiendaCielo">
-    <img src="https://github-readme-stats.vercel.app/api/pin/?username=skillparty&repo=tiendaCielo&bg_color=00000000&hide_border=true&icon_color=58a6ff&title_color=c9d1d9&text_color=8b949e" alt="tiendaCielo" />
+    <img src="https://github-readme-stats-sigma-five.vercel.app/api/pin/?username=skillparty&repo=tiendaCielo&bg_color=00000000&hide_border=true&icon_color=58a6ff&title_color=c9d1d9&text_color=8b949e" alt="tiendaCielo" />
   </a>
   <a href="https://github.com/skillparty/skillparty">
-    <img src="https://github-readme-stats.vercel.app/api/pin/?username=skillparty&repo=skillparty&bg_color=00000000&hide_border=true&icon_color=58a6ff&title_color=c9d1d9&text_color=8b949e" alt="skillparty" />
+    <img src="https://github-readme-stats-sigma-five.vercel.app/api/pin/?username=skillparty&repo=skillparty&bg_color=00000000&hide_border=true&icon_color=58a6ff&title_color=c9d1d9&text_color=8b949e" alt="skillparty" />
   </a>
 </div>
 

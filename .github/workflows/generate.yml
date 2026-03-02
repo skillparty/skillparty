@@ -2,7 +2,7 @@ name: Generate Profile Assets
 
 on:
   schedule:
-    - cron: "0 */12 * * *"
+    - cron: "0 0 1 * *"
   workflow_dispatch:
   push:
     branches:
@@ -34,7 +34,7 @@ jobs:
 
       - name: Generate custom SVGs
         env:
-          GITHUB_TOKEN: ${{ secrets.GH_PAT }}
+          GITHUB_TOKEN: ${{ secrets.GH_PAT || secrets.GITHUB_TOKEN }}
         run: python scripts/update_animations.py
 
       # ── Step 2: Generate contribution snake animation ──

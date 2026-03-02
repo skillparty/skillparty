@@ -3,23 +3,7 @@ import requests
 import json
 import random
 import traceback
-import math
-import textwrap
-from pathlib import Path
 from datetime import datetime, timedelta
-
-try:
-    from dotenv import load_dotenv
-except ImportError:
-    load_dotenv = None
-
-# Load .env from the project root (one level up from scripts/)
-env_path = Path(__file__).resolve().parent.parent / '.env'
-if load_dotenv and env_path.exists():
-    load_dotenv(dotenv_path=env_path)
-    print(f"Loaded .env from {env_path}")
-else:
-    print("Skipping .env load (file not found or dotenv missing)")
 
 GITHUB_TOKEN = os.environ.get("GITHUB_TOKEN")
 USER = os.environ.get("GITHUB_REPOSITORY_OWNER", "skillparty")
@@ -28,45 +12,46 @@ HEADERS = {"Authorization": f"Bearer {GITHUB_TOKEN}"} if GITHUB_TOKEN else {}
 
 def fetch_contributions():
     """Returns (grid, streak_info) where streak_info = {current, longest, total}"""
-    if not GITHUB_TOKEN:
-        print("No GITHUB_TOKEN provided, falling back to simulated data.")
-        return simulate_contributions()
-
-    query = """
-    query($user: String!) {
-      user(login: $user) {
-        contributionsCollection {
-          contributionCalendar {
-            totalContributions
-            weeks {
-              contributionDays {
-                contributionCount
-                date
+    if GITHUB_TOKEN:
+        query = """
+        query($user: String!) {
+          user(login: $user) {
+            contributionsCollection {
+              contributionCalendar {
+                totalContributions
+                weeks {
+                  contributionDays {
+                    contributionCount
+                    date
+                  }
+                }
               }
             }
           }
         }
-      }
-    }
-    """
-    
-    response = requests.post(
-        "https://api.github.com/graphql",
-        json={"query": query, "variables": {"user": USER}},
-        headers=HEADERS
-    )
-    
-    if response.status_code == 200:
-        data = response.json()
-        print("Contributions data response:")
-        print(json.dumps(data, indent=2)[:500] + "...")
-        if "errors" in data:
+        """
+
+        response = requests.post(
+            "https://api.github.com/graphql",
+            json={"query": query, "variables": {"user": USER}},
+            headers=HEADERS
+        )
+
+        if response.status_code == 200:
+            data = response.json()
+            print("Contributions data response:")
+            print(json.dumps(data, indent=2)[:500] + "...")
+            if "errors" not in data:
+                grid, streak_info = process_github_contribs(data)
+                return grid, streak_info, "REAL"
             print("GraphQL Error:", data["errors"])
-            return simulate_contributions()
-        return process_github_contribs(data)
+        else:
+            print("Failed to fetch data:", response.status_code, response.text)
     else:
-        print("Failed to fetch data:", response.status_code, response.text)
-        return simulate_contributions()
+        print("No GITHUB_TOKEN provided, falling back to simulated data.")
+
+    grid, streak_info = simulate_contributions()
+    return grid, streak_info, "SIMULATED"
 
 def simulate_contributions():
     # 42 weeks x 7 days
@@ -155,113 +140,114 @@ def process_github_contribs(data):
         traceback.print_exc()
         return simulate_contributions()
 
-def generate_black_hole_svg(grid, streak_info):
+def generate_black_hole_svg(grid, streak_info, data_source="UNKNOWN"):
     COLS, ROWS = 42, 7
     BLOCK, CELL = 14, 24
     GRID_X, GRID_Y = 100, 72
     W, H = 1200, 340
     BH_Y = 151
+    BH_X = 620
     DUR = 20
     
     COLORS = ["#161B22", "#0E4429", "#006D32", "#26A641", "#39D353"]
 
-    def col_delay(c):
-        cx = GRID_X + c * CELL + BLOCK / 2
-        return round((cx + 50) / 65, 1)
+    max_dist = ((BH_X - GRID_X) ** 2 + (BH_Y - GRID_Y) ** 2) ** 0.5
 
+    def absorb_timing(cx, cy):
+        dist = ((BH_X - cx) ** 2 + (BH_Y - cy) ** 2) ** 0.5
+        normalized = min(1.0, dist / max_dist)
+        start_t = round(0.08 + normalized * 0.62, 3)
+        impact_t = round(min(0.95, start_t + 0.13), 3)
+        return start_t, impact_t
+
+    fx_random = random.Random(20260302)
     grid_lines = []
-    total_contribs = 0
+    absorb_end_t = 0.72
     for c in range(COLS):
-        delay = col_delay(c)
-        for r in range(ROWS):
-            val = grid[c][r]
-            if val > 0: total_contribs += 1
-            
-            cx = GRID_X + c * CELL + BLOCK // 2
-            cy = GRID_Y + r * CELL + BLOCK // 2
-            color = COLORS[val]
-            
-            # Calculate vertical pull toward black hole path
-            dy = BH_Y - cy  # positive = below, negative = above
-            # Absorption pull distance (how far the square travels toward BH)
-            pull_y = round(dy * 0.85, 1)
-            # Slight horizontal pull (toward where BH will be - ahead of the square)
-            pull_x = round(15 + (c % 5) * 2, 1)
+      for r in range(ROWS):
+        val = grid[c][r]
+        cx = GRID_X + c * CELL + BLOCK // 2
+        cy = GRID_Y + r * CELL + BLOCK // 2
+        color = COLORS[val]
 
-            grid_lines.append(f'    <g transform="translate({cx},{cy})">')
-            grid_lines.append(f'      <rect x="-7" y="-7" width="14" height="14" rx="3" fill="{color}">')
-            
-            # 1) TRANSLATE: Pull toward BH vertically + slight horizontal drift
-            grid_lines.append(
-                f'        <animateTransform attributeName="transform" type="translate"'
-                f' values="0 0;0 0;{pull_x} {pull_y};{pull_x} {pull_y};0 0;0 0"'
-                f' keyTimes="0;0.03;0.08;0.48;0.58;0.64"'
-                f' dur="{DUR}s" begin="{delay}s" repeatCount="indefinite"'
-                f' additive="sum"/>'
-            )
-            
-            # 2) SCALE: Stretch vertically (spaghettification) then collapse
-            stretch_dir = "1 1;1.2 1.4;0.3 2.5;0 0;0 0;0.5 0.5;1 1" if abs(dy) > 30 else "1 1;1.3 1.3;0.2 1.8;0 0;0 0;0.5 0.5;1 1"
-            grid_lines.append(
-                f'        <animateTransform attributeName="transform" type="scale"'
-                f' values="{stretch_dir}"'
-                f' keyTimes="0;0.03;0.07;0.09;0.48;0.56;0.64"'
-                f' dur="{DUR}s" begin="{delay}s" repeatCount="indefinite"'
-                f' additive="sum"/>'
-            )
-            
-            # 3) ROTATE: Spin as it gets sucked in
-            spin_dir = 360 if (c + r) % 2 == 0 else -360
-            grid_lines.append(
-                f'        <animateTransform attributeName="transform" type="rotate"'
-                f' values="0;0;{spin_dir};{spin_dir};{spin_dir};0;0"'
-                f' keyTimes="0;0.03;0.09;0.48;0.56;0.64;1"'
-                f' dur="{DUR}s" begin="{delay}s" repeatCount="indefinite"'
-                f' additive="sum"/>'
-            )
-            
-            # 4) OPACITY: Fade with glow pulse before absorption
-            grid_lines.append(
-                f'        <animate attributeName="opacity"'
-                f' values="1;1;0.8;0;0;0.1;0.5;1"'
-                f' keyTimes="0;0.02;0.05;0.09;0.48;0.54;0.60;0.66"'
-                f' dur="{DUR}s" begin="{delay}s" repeatCount="indefinite"/>'
-            )
-            
-            # 5) COLOR SHIFT: Turn purple/cyan as gravitational lensing kicks in
-            if val > 0:
-                grid_lines.append(
-                    f'        <animate attributeName="fill"'
-                    f' values="{color};{color};#A855F7;#7C3AED;#7C3AED;#A855F7;{color};{color}"'
-                    f' keyTimes="0;0.02;0.05;0.09;0.48;0.54;0.60;0.66"'
-                    f' dur="{DUR}s" begin="{delay}s" repeatCount="indefinite"/>'
-                )
-            
-            grid_lines.append(f'      </rect>')
-            
-            # 6) ABSORPTION PARTICLES: Small dots flying toward BH path
-            if val > 0:
-                for p in range(2):
-                    p_offset_x = random.randint(-5, 5)
-                    p_offset_y = random.randint(-5, 5)
-                    particle_delay = round(delay + 0.03 * DUR + p * 0.3, 2)
-                    p_color = "#A855F7" if p == 0 else "#00FFFF"
-                    p_size = 2 if p == 0 else 1.5
-                    grid_lines.append(
-                        f'      <circle cx="{p_offset_x}" cy="{p_offset_y}" r="{p_size}" fill="{p_color}" opacity="0">'
-                        f'        <animate attributeName="opacity" values="0;0.9;0.6;0" keyTimes="0;0.1;0.7;1"'
-                        f' dur="1.2s" begin="{particle_delay}s" repeatCount="indefinite"/>'
-                        f'        <animate attributeName="cx" values="{p_offset_x};{pull_x * 1.5}" dur="1.2s"'
-                        f' begin="{particle_delay}s" repeatCount="indefinite"/>'
-                        f'        <animate attributeName="cy" values="{p_offset_y};{pull_y}" dur="1.2s"'
-                        f' begin="{particle_delay}s" repeatCount="indefinite"/>'
-                        f'        <animate attributeName="r" values="{p_size};0.5;0" keyTimes="0;0.7;1"'
-                        f' dur="1.2s" begin="{particle_delay}s" repeatCount="indefinite"/>'
-                        f'      </circle>'
-                    )
-            
-            grid_lines.append(f'    </g>')
-            
+        start_t, impact_t = absorb_timing(cx, cy)
+        lens_t = round(max(0.0, start_t - 0.035), 3)
+        pull_x = round((BH_X - cx) * 0.92, 1)
+        pull_y = round((BH_Y - cy) * 0.92, 1)
+        stretch_dir = "1 1;1 1;0.8 1.25;0.16 0.16" if abs(BH_Y - cy) > 30 else "1 1;1 1;0.85 1.15;0.18 0.18"
+        spin_dir = 360 if (c + r) % 2 == 0 else -360
+
+        grid_lines.append(f'    <g transform="translate({cx},{cy})">')
+        grid_lines.append(f'      <rect x="-7" y="-7" width="14" height="14" rx="3" fill="{color}" opacity="{1.0 if val > 0 else 0.28}">')
+
+        if val == 0:
+          grid_lines.append(f'      </rect>')
+          grid_lines.append(f'    </g>')
+          continue
+
+        absorb_end_t = max(absorb_end_t, impact_t)
+
+        grid_lines.append(
+          f'        <animateTransform attributeName="transform" type="translate"'
+          f' values="0 0;0 0;{pull_x} {pull_y};{pull_x} {pull_y}"'
+          f' keyTimes="0;{start_t};{impact_t};1"'
+          f' dur="{DUR}s" begin="0s" repeatCount="indefinite"'
+          f' additive="sum"/>'
+        )
+
+        grid_lines.append(
+          f'        <animateTransform attributeName="transform" type="scale"'
+          f' values="{stretch_dir}"'
+          f' keyTimes="0;{start_t};{round(min(0.97, start_t + 0.04), 3)};{impact_t}"'
+          f' dur="{DUR}s" begin="0s" repeatCount="indefinite"'
+          f' additive="sum"/>'
+        )
+
+        grid_lines.append(
+          f'        <animateTransform attributeName="transform" type="rotate"'
+          f' values="0;0;{spin_dir};{spin_dir}"'
+          f' keyTimes="0;{start_t};{impact_t};1"'
+          f' dur="{DUR}s" begin="0s" repeatCount="indefinite"'
+          f' additive="sum"/>'
+        )
+
+        grid_lines.append(
+          f'        <animate attributeName="opacity"'
+          f' values="1;1;0"'
+          f' keyTimes="0;{start_t};{impact_t}"'
+          f' dur="{DUR}s" begin="0s" repeatCount="indefinite"/>'
+        )
+
+        grid_lines.append(
+          f'        <animate attributeName="fill"'
+          f' values="{color};{color};#A855F7;#7C3AED"'
+          f' keyTimes="0;{lens_t};{start_t};{impact_t}"'
+          f' dur="{DUR}s" begin="0s" repeatCount="indefinite"/>'
+        )
+
+        grid_lines.append(f'      </rect>')
+
+        for p in range(2):
+          p_offset_x = fx_random.randint(-5, 5)
+          p_offset_y = fx_random.randint(-5, 5)
+          particle_delay = round(start_t * DUR + p * 0.18, 2)
+          p_color = "#A855F7" if p == 0 else "#00FFFF"
+          p_size = 1.6 if p == 0 else 1.2
+          grid_lines.append(
+            f'      <circle cx="{p_offset_x}" cy="{p_offset_y}" r="{p_size}" fill="{p_color}" opacity="0">'
+            f'        <animate attributeName="opacity" values="0;0.55;0.35;0" keyTimes="0;0.1;0.7;1"'
+            f' dur="1.2s" begin="{particle_delay}s" repeatCount="indefinite"/>'
+            f'        <animate attributeName="cx" values="{p_offset_x};{pull_x * 1.25}" dur="1.5s"'
+            f' begin="{particle_delay}s" repeatCount="indefinite"/>'
+            f'        <animate attributeName="cy" values="{p_offset_y};{pull_y}" dur="1.5s"'
+            f' begin="{particle_delay}s" repeatCount="indefinite"/>'
+            f'        <animate attributeName="r" values="{p_size};0.5;0" keyTimes="0;0.7;1"'
+            f' dur="1.5s" begin="{particle_delay}s" repeatCount="indefinite"/>'
+            f'      </circle>'
+          )
+
+        grid_lines.append(f'    </g>')
+
     grid_svg = "\\n".join(grid_lines)
 
     # Matrix rain columns
@@ -298,8 +284,25 @@ def generate_black_hole_svg(grid, streak_info):
     for y in range(0, H + 1, 50):
         bg_lines.append(f'    <line x1="0" y1="{y}" x2="{W}" y2="{y}"/>')
     bg_grid_svg = "\\n".join(bg_lines)
+
+    stars_lines = []
+    for i in range(40):
+      sx = fx_random.randint(8, W - 8)
+      sy = fx_random.randint(8, H - 8)
+      sr = round(fx_random.uniform(0.5, 1.3), 2)
+      sop = round(fx_random.uniform(0.12, 0.36), 2)
+      sdur = round(fx_random.uniform(3.8, 8.8), 1)
+      sbegin = round(fx_random.uniform(0.0, 3.5), 2)
+      stars_lines.append(
+        f'    <circle cx="{sx}" cy="{sy}" r="{sr}" fill="#7DD3FC" opacity="{sop}" filter="url(#starGlow)">'
+        f'<animate attributeName="opacity" values="{sop};{round(min(0.55, sop + 0.16), 2)};{sop}" dur="{sdur}s" begin="{sbegin}s" repeatCount="indefinite"/>'
+        f'</circle>'
+      )
+    stars_svg = "\\n".join(stars_lines)
     
     timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S UTC")
+
+    absorb_end_t = round(min(0.95, absorb_end_t), 3)
 
     svg = f'''<svg width="{W}" height="{H}" viewBox="0 0 {W} {H}" fill="none" xmlns="http://www.w3.org/2000/svg">
   <defs>
@@ -318,6 +321,10 @@ def generate_black_hole_svg(grid, streak_info):
     </filter>
     <filter id="glowHeavy">
       <feGaussianBlur stdDeviation="6" result="b"/>
+      <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+    <filter id="starGlow">
+      <feGaussianBlur stdDeviation="1.1" result="b"/>
       <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
     </filter>
     <filter id="glitch">
@@ -371,6 +378,10 @@ def generate_black_hole_svg(grid, streak_info):
 {bg_grid_svg}
   </g>
 
+  <g>
+{stars_svg}
+  </g>
+
   <!-- Matrix rain -->
   <g font-family="ui-monospace,SFMono-Regular,Menlo,monospace" font-size="11" filter="url(#glow)">
 {rain_svg}
@@ -405,41 +416,56 @@ def generate_black_hole_svg(grid, streak_info):
   </rect>
 
   <!-- BLACK HOLE -->
-  <g>
-    <animateTransform attributeName="transform" type="translate"
-      values="-50 {BH_Y};1250 {BH_Y}" dur="{DUR}s" repeatCount="indefinite"/>
+  <g transform="translate({BH_X},{BH_Y})">
+    <rect x="-7" y="-7" width="14" height="14" rx="2" fill="#030303" opacity="0.95" filter="url(#glow)">
+      <animate attributeName="x" values="-7;0;0" keyTimes="0;{absorb_end_t};1" dur="{DUR}s" repeatCount="indefinite"/>
+      <animate attributeName="y" values="-7;0;0" keyTimes="0;{absorb_end_t};1" dur="{DUR}s" repeatCount="indefinite"/>
+      <animate attributeName="width" values="14;0;0" keyTimes="0;{absorb_end_t};1" dur="{DUR}s" repeatCount="indefinite"/>
+      <animate attributeName="height" values="14;0;0" keyTimes="0;{absorb_end_t};1" dur="{DUR}s" repeatCount="indefinite"/>
+      <animate attributeName="opacity" values="0.95;0.12;0" keyTimes="0;{absorb_end_t};1" dur="{DUR}s" repeatCount="indefinite"/>
+    </rect>
     
     <!-- Gravitational distortion waves -->
-    <circle r="110" fill="none" stroke="#7C3AED" stroke-width="0.8" opacity="0" filter="url(#glowStrong)">
-      <animate attributeName="r" values="40;120;120" dur="2s" repeatCount="indefinite"/>
-      <animate attributeName="opacity" values="0.5;0.1;0" dur="2s" repeatCount="indefinite"/>
+    <circle r="7" fill="none" stroke="#7C3AED" stroke-width="0.8" opacity="0" filter="url(#glowStrong)">
+      <animate attributeName="r" values="7;118;118" keyTimes="0;{absorb_end_t};1" dur="{DUR}s" repeatCount="indefinite"/>
+      <animate attributeName="opacity" values="0.28;0.06;0.06" keyTimes="0;{absorb_end_t};1" dur="{DUR}s" repeatCount="indefinite"/>
     </circle>
-    <circle r="80" fill="none" stroke="#00FFFF" stroke-width="0.5" opacity="0" filter="url(#glow)">
-      <animate attributeName="r" values="30;100;100" dur="2.5s" repeatCount="indefinite"/>
-      <animate attributeName="opacity" values="0.3;0.05;0" dur="2.5s" repeatCount="indefinite"/>
+    <circle r="6" fill="none" stroke="#00FFFF" stroke-width="0.5" opacity="0" filter="url(#glow)">
+      <animate attributeName="r" values="6;96;96" keyTimes="0;{absorb_end_t};1" dur="{DUR}s" repeatCount="indefinite"/>
+      <animate attributeName="opacity" values="0.2;0.03;0.03" keyTimes="0;{absorb_end_t};1" dur="{DUR}s" repeatCount="indefinite"/>
     </circle>
     
-    <circle r="90" fill="url(#bhGlow)" opacity="0.5" filter="url(#glowHeavy)">
-      <animate attributeName="r" values="80;95;80" dur="3s" repeatCount="indefinite"/>
-      <animate attributeName="opacity" values="0.4;0.6;0.4" dur="3s" repeatCount="indefinite"/>
+    <circle r="7" fill="url(#bhGlow)" opacity="0.4" filter="url(#glowHeavy)">
+      <animate attributeName="r" values="7;88;88" keyTimes="0;{absorb_end_t};1" dur="{DUR}s" repeatCount="indefinite"/>
+      <animate attributeName="opacity" values="0.26;0.45;0.45" keyTimes="0;{absorb_end_t};1" dur="{DUR}s" repeatCount="indefinite"/>
     </circle>
-    <ellipse rx="55" ry="14" fill="none" stroke="url(#accretion1)" stroke-width="4" opacity="0.7" filter="url(#glowStrong)">
-      <animateTransform attributeName="transform" type="rotate" from="0" to="360" dur="3.5s" repeatCount="indefinite"/>
+    <ellipse rx="7" ry="2" fill="none" stroke="url(#accretion1)" stroke-width="3" opacity="0.6" filter="url(#glowStrong)">
+      <animate attributeName="rx" values="7;56;56" keyTimes="0;{absorb_end_t};1" dur="{DUR}s" repeatCount="indefinite"/>
+      <animate attributeName="ry" values="2;14;14" keyTimes="0;{absorb_end_t};1" dur="{DUR}s" repeatCount="indefinite"/>
+      <animateTransform attributeName="transform" type="rotate" from="0" to="360" dur="5.2s" repeatCount="indefinite"/>
     </ellipse>
-    <ellipse rx="40" ry="10" fill="none" stroke="url(#accretion2)" stroke-width="2.5" opacity="0.6" filter="url(#glow)">
-      <animateTransform attributeName="transform" type="rotate" from="360" to="0" dur="2.2s" repeatCount="indefinite"/>
+    <ellipse rx="6" ry="2" fill="none" stroke="url(#accretion2)" stroke-width="2" opacity="0.5" filter="url(#glow)">
+      <animate attributeName="rx" values="6;40;40" keyTimes="0;{absorb_end_t};1" dur="{DUR}s" repeatCount="indefinite"/>
+      <animate attributeName="ry" values="2;10;10" keyTimes="0;{absorb_end_t};1" dur="{DUR}s" repeatCount="indefinite"/>
+      <animateTransform attributeName="transform" type="rotate" from="360" to="0" dur="4.8s" repeatCount="indefinite"/>
     </ellipse>
-    <ellipse rx="28" ry="7" fill="none" stroke="#00FFFF" stroke-width="1.5" opacity="0.5" filter="url(#glow)">
-      <animateTransform attributeName="transform" type="rotate" from="0" to="360" dur="1.5s" repeatCount="indefinite"/>
+    <ellipse rx="5" ry="1.6" fill="none" stroke="#00FFFF" stroke-width="1.2" opacity="0.45" filter="url(#glow)">
+      <animate attributeName="rx" values="5;28;28" keyTimes="0;{absorb_end_t};1" dur="{DUR}s" repeatCount="indefinite"/>
+      <animate attributeName="ry" values="1.6;7;7" keyTimes="0;{absorb_end_t};1" dur="{DUR}s" repeatCount="indefinite"/>
+      <animateTransform attributeName="transform" type="rotate" from="0" to="360" dur="4.1s" repeatCount="indefinite"/>
     </ellipse>
-    <circle r="20" fill="none" stroke="#9333EA" stroke-width="1.5" filter="url(#glowStrong)">
-      <animate attributeName="r" values="18;23;18" dur="2s" repeatCount="indefinite"/>
-      <animate attributeName="opacity" values="0.7;1;0.7" dur="2s" repeatCount="indefinite"/>
+    <circle r="7" fill="none" stroke="#9333EA" stroke-width="1.3" filter="url(#glowStrong)">
+      <animate attributeName="r" values="7;24;24" keyTimes="0;{absorb_end_t};1" dur="{DUR}s" repeatCount="indefinite"/>
+      <animate attributeName="opacity" values="0.58;0.82;0.82" keyTimes="0;{absorb_end_t};1" dur="{DUR}s" repeatCount="indefinite"/>
     </circle>
-    <circle r="16" fill="url(#bhCore)"/>
-    <circle r="6" fill="#000000"/>
-    <circle r="3" fill="#000000">
-      <animate attributeName="r" values="3;4;3" dur="1s" repeatCount="indefinite"/>
+    <circle r="7" fill="url(#bhCore)">
+      <animate attributeName="r" values="7;20;20" keyTimes="0;{absorb_end_t};1" dur="{DUR}s" repeatCount="indefinite"/>
+    </circle>
+    <circle r="3.2" fill="#000000">
+      <animate attributeName="r" values="3.2;8;8" keyTimes="0;{absorb_end_t};1" dur="{DUR}s" repeatCount="indefinite"/>
+    </circle>
+    <circle r="1.2" fill="#000000">
+      <animate attributeName="r" values="1.2;2.4;2.4" keyTimes="0;{absorb_end_t};1" dur="{DUR}s" repeatCount="indefinite"/>
     </circle>
   </g>
 
@@ -467,6 +493,13 @@ def generate_black_hole_svg(grid, streak_info):
     </text>
   </g>
 
+  <g filter="url(#glow)">
+    <text x="24" y="318" font-family="ui-monospace,SFMono-Regular,Menlo,monospace" font-size="10" fill="{('#39D353' if data_source == 'REAL' else '#F97316')}" opacity="0.85">
+      DATA SOURCE: {data_source}
+      <animate attributeName="opacity" values="0.6;0.82;0.6" dur="3.4s" repeatCount="indefinite"/>
+    </text>
+  </g>
+
   <g transform="translate(1100,20)">
     <circle cx="0" cy="0" r="4" fill="#00FF41" filter="url(#glow)">
       <animate attributeName="opacity" values="1;0.3;1" dur="1.5s" repeatCount="indefinite"/>
@@ -487,7 +520,9 @@ def generate_black_hole_svg(grid, streak_info):
         f.write(svg)
 
 def fetch_languages():
-    if not GITHUB_TOKEN: return simulate_languages()
+    if not GITHUB_TOKEN:
+        langs, last_repo = simulate_languages()
+        return langs, last_repo, "SIMULATED"
     query = """
     query($user: String!) {
       user(login: $user) {
@@ -519,7 +554,8 @@ def fetch_languages():
         print(json.dumps(data, indent=2)[:500] + "...")
         if "errors" in data:
             print("GraphQL Error (langs):", data["errors"])
-            return simulate_languages()
+            langs, last_repo = simulate_languages()
+            return langs, last_repo, "SIMULATED"
         
         try:
             lang_stats = {}
@@ -544,14 +580,16 @@ def fetch_languages():
                 
             # Get last active repo
             last_repo = repos[0]["name"] if repos else "unknown"
-            return results, last_repo
+            return results, last_repo, "REAL"
         except Exception as e:
             print(f"Error parsing languages: {e}")
             traceback.print_exc()
-            return simulate_languages()
+            langs, last_repo = simulate_languages()
+            return langs, last_repo, "SIMULATED"
     else:
         print("Failed to fetch languages:", response.status_code, response.text)
-    return simulate_languages()
+        langs, last_repo = simulate_languages()
+        return langs, last_repo, "SIMULATED"
 
 def simulate_languages():
     return [
@@ -562,29 +600,43 @@ def simulate_languages():
         {"name": "HTML", "color": "#E34C26", "percent": 5.0},
     ], "skillparty/skillparty"
 
-def generate_cyber_langs(langs, last_repo):
+def generate_cyber_langs(langs, last_repo, data_source="UNKNOWN"):
     W, H = 500, 200
     
     # Render bars
     bars_svg = ""
     y_offset = 60
-    for l in langs:
+    for idx, l in enumerate(langs):
         width = int((l["percent"] / 100) * 300)
         color = l["color"] or "#00FFFF"
+        bar_dur = round(1.4 + idx * 0.25, 1)
+        bar_begin = round(idx * 0.12, 2)
+        shimmer_dur = round(4.4 + idx * 0.45, 2)
         bars_svg += f'''
         <g transform="translate(40, {y_offset})">
             <text x="0" y="0" font-family="ui-monospace,Menlo,monospace" font-size="10" fill="{color}" opacity="0.9" filter="url(#glow)">{l['name'].upper()}</text>
             <text x="390" y="0" font-family="ui-monospace,Menlo,monospace" font-size="10" fill="{color}" opacity="0.9">{l['percent']:.1f}%</text>
             <rect x="0" y="8" width="400" height="4" fill="#1b2838" rx="2"/>
             <rect x="0" y="8" width="{width}" height="4" fill="{color}" rx="2" filter="url(#glow)">
-               <animate attributeName="width" from="0" to="{width}" dur="1.5s" fill="freeze" calcMode="spline" keyTimes="0;1" keySplines="0.1, 0.8, 0.3, 1"/>
+            <animate attributeName="width" from="0" to="{width}" dur="{bar_dur}s" begin="{bar_begin}s" fill="freeze" calcMode="spline" keyTimes="0;1" keySplines="0.1, 0.8, 0.3, 1"/>
             </rect>
+          <rect x="-90" y="8" width="52" height="4" fill="url(#barShimmer)" opacity="0.35">
+            <animate attributeName="x" values="-90;{width + 20};-90" dur="{shimmer_dur}s" begin="{bar_begin}s" repeatCount="indefinite"/>
+          </rect>
+          <circle cx="{width}" cy="10" r="1.9" fill="#FFFFFF" opacity="0" filter="url(#glow)">
+            <animate attributeName="opacity" values="0;0.6;0" dur="{round(bar_dur + 0.9, 2)}s" begin="{bar_begin}s" repeatCount="indefinite"/>
+          </circle>
         </g>
         '''
         y_offset += 25
         
     svg = f'''<svg width="{W}" height="{H}" viewBox="0 0 {W} {H}" fill="none" xmlns="http://www.w3.org/2000/svg">
   <defs>
+    <linearGradient id="barShimmer" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0%" stop-color="#FFFFFF" stop-opacity="0"/>
+      <stop offset="50%" stop-color="#FFFFFF" stop-opacity="0.55"/>
+      <stop offset="100%" stop-color="#FFFFFF" stop-opacity="0"/>
+    </linearGradient>
     <filter id="glow">
       <feGaussianBlur stdDeviation="1.5" result="b"/>
       <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
@@ -599,6 +651,10 @@ def generate_cyber_langs(langs, last_repo):
   <g>
     {bars_svg}
   </g>
+
+  <rect x="40" y="50" width="400" height="2" fill="#00FFFF" opacity="0.04">
+    <animateTransform attributeName="transform" type="translate" values="0 0;0 108;0 0" dur="7.8s" repeatCount="indefinite"/>
+  </rect>
   
   <rect x="40" y="{H-25}" width="8" height="8" fill="#FF003C" filter="url(#glow)">
     <animate attributeName="opacity" values="1;0.2;1" dur="1s" repeatCount="indefinite"/>
@@ -606,92 +662,11 @@ def generate_cyber_langs(langs, last_repo):
   <text x="55" y="{H-17}" font-family="ui-monospace,Menlo,monospace" font-size="9" fill="#FF003C" opacity="0.8">
     NOW OPERATING: {last_repo}
   </text>
+  <text x="300" y="{H-17}" font-family="ui-monospace,Menlo,monospace" font-size="9" fill="{('#39D353' if data_source == 'REAL' else '#F97316')}" opacity="0.85">
+    DATA: {data_source}
+  </text>
 </svg>'''
     with open("dist/cyber-langs.svg", "w") as f:
-        f.write(svg)
-
-def generate_ascii_art_svg():
-    """Generates an SVG with the ASCII art name 'skillparty'."""
-    W, H = 600, 150
-    
-    # ASCII Art for "skillparty"
-    ascii_art = [
-        r"  ___  _    _  _  _  ___              _            ",
-        r" / __|| |__(_)| || || _ \ __ _  _ _ | |_  _  _   ",
-        r" \__ \| / /| || || ||  _// _` || '_||  _|| || |  ",
-        r" |___/|_\_\|_||_||_||_|  \__,_||_|   \__| \_, |  ",
-        r"                                          |__/   "
-    ]
-    
-    lines_svg = []
-    for i, line in enumerate(ascii_art):
-        y = 30 + i * 18
-        # Add a glow effect and gradient fill
-        lines_svg.append(
-            f'<text x="50%" y="{y}" text-anchor="middle" font-family="monospace" font-size="14" fill="#00FF41" opacity="0">{line}'
-            f'<animate attributeName="opacity" from="0" to="1" dur="0.5s" begin="{i*0.2}s" fill="freeze" />'
-            f'<animate attributeName="fill" values="#00FF41;#00FFFF;#00FF41" dur="4s" repeatCount="indefinite" />'
-            f'</text>'
-        )
-
-    svg = f'''<svg width="{W}" height="{H}" viewBox="0 0 {W} {H}" fill="none" xmlns="http://www.w3.org/2000/svg">
-    <rect width="{W}" height="{H}" rx="10" fill="#0d1117" />
-    <g style="white-space: pre;">
-        {''.join(lines_svg)}
-    </g>
-    </svg>'''
-    
-    with open("dist/ascii-art.svg", "w") as f:
-        f.write(svg)
-
-def generate_fractal_svg():
-    """Generates a Pythagorean Tree fractal SVG."""
-    W, H = 600, 400
-    
-    lines = []
-    
-    def draw_branch(x, y, length, angle, depth, max_depth):
-        if depth > max_depth:
-            return
-        
-        x2 = x - length * math.sin(math.radians(angle))
-        y2 = y - length * math.cos(math.radians(angle))
-        
-        color_ratio = depth / max_depth
-        r = int(0 + color_ratio * 124)   # 0 -> 7C
-        g = int(255 - color_ratio * 50)  # 255 -> ?
-        b = int(65 + color_ratio * 190)  # 41 -> FF
-        color = f"#{r:02x}{g:02x}{b:02x}"
-        
-        stroke_width = max(1, (max_depth - depth))
-        
-        lines.append(f'<line x1="{x:.1f}" y1="{y:.1f}" x2="{x2:.1f}" y2="{y2:.1f}" stroke="{color}" stroke-width="{stroke_width}" opacity="0.8" />')
-        
-        new_length = length * 0.8
-        draw_branch(x2, y2, new_length, angle + 30, depth + 1, max_depth)
-        draw_branch(x2, y2, new_length, angle - 30, depth + 1, max_depth)
-
-    # Start the tree from bottom center
-    draw_branch(W/2, H-20, 80, 0, 0, 10)
-    
-    svg = f'''<svg width="{W}" height="{H}" viewBox="0 0 {W} {H}" fill="none" xmlns="http://www.w3.org/2000/svg">
-    <rect width="{W}" height="{H}" rx="10" fill="#0d1117" />
-    <text x="20" y="30" fill="#00FF41" font-family="monospace" font-size="12">./generate_fractal --type=tree</text>
-    <g filter="url(#glow)">
-        {''.join(lines)}
-    </g>
-    <defs>
-        <filter id="glow">
-            <feGaussianBlur stdDeviation="1.5" result="coloredBlur"/>
-            <feMerge>
-                <feMergeNode in="coloredBlur"/>
-                <feMergeNode in="SourceGraphic"/>
-            </feMerge>
-        </filter>
-    </defs>
-    </svg>'''
-    
-    with open("dist/fractal.svg", "w") as f:
         f.write(svg)
 
 def generate_header_svg():
@@ -828,30 +803,24 @@ if GITHUB_TOKEN:
 data_source = {"contributions": "unknown", "languages": "unknown"}
 
 try:
-    print("Generating ASCII Art SVG...")
-    generate_ascii_art_svg()
-
-    print("Generating Fractal SVG...")
-    generate_fractal_svg()
-
     print("Generating Header SVG...")
     generate_header_svg()
 
     print("Fetching contributions...")
-    grid, streak_info = fetch_contributions()
-    data_source["contributions"] = "REAL" if GITHUB_TOKEN else "SIMULATED"
+    grid, streak_info, contributions_source = fetch_contributions()
+    data_source["contributions"] = contributions_source
     print(f"Streak info: {streak_info}")
     print(f"Contributions source: {data_source['contributions']}")
     print("Generating Matrix SVG...")
-    generate_black_hole_svg(grid, streak_info)
+    generate_black_hole_svg(grid, streak_info, data_source["contributions"])
 
     print("Fetching Languages...")
-    langs, last_repo = fetch_languages()
-    data_source["languages"] = "REAL" if GITHUB_TOKEN else "SIMULATED"
+    langs, last_repo, languages_source = fetch_languages()
+    data_source["languages"] = languages_source
     print(f"Languages source: {data_source['languages']}")
     print(f"Languages: {[l['name'] for l in langs]}")
     print("Generating Cyber Langs SVG...")
-    generate_cyber_langs(langs, last_repo)
+    generate_cyber_langs(langs, last_repo, data_source["languages"])
 
     print(f"\n=== SUMMARY ===")
     print(f"Contributions: {data_source['contributions']}")
