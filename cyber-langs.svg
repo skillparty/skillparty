@@ -1,0 +1,69 @@
+<svg width="500" height="200" viewBox="0 0 500 200" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <filter id="glow">
+      <feGaussianBlur stdDeviation="1.5" result="b"/>
+      <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+  </defs>
+  <rect width="500" height="200" rx="8" fill="#0A0A0A" stroke="#1B2838" stroke-width="1"/>
+  
+  <text x="40" y="30" font-family="ui-monospace,Menlo,monospace" font-size="12" fill="#00FFFF" opacity="0.8" filter="url(#glow)">
+    sys.status.langs // NEURAL LINK ACTIVE
+  </text>
+  
+  <g>
+    
+        <g transform="translate(40, 60)">
+            <text x="0" y="0" font-family="ui-monospace,Menlo,monospace" font-size="10" fill="#3178C6" opacity="0.9" filter="url(#glow)">TYPESCRIPT</text>
+            <text x="390" y="0" font-family="ui-monospace,Menlo,monospace" font-size="10" fill="#3178C6" opacity="0.9">45.0%</text>
+            <rect x="0" y="8" width="400" height="4" fill="#1b2838" rx="2"/>
+            <rect x="0" y="8" width="135" height="4" fill="#3178C6" rx="2" filter="url(#glow)">
+               <animate attributeName="width" from="0" to="135" dur="1.5s" fill="freeze" calcMode="spline" keyTimes="0;1" keySplines="0.1, 0.8, 0.3, 1"/>
+            </rect>
+        </g>
+        
+        <g transform="translate(40, 85)">
+            <text x="0" y="0" font-family="ui-monospace,Menlo,monospace" font-size="10" fill="#F7DF1E" opacity="0.9" filter="url(#glow)">JAVASCRIPT</text>
+            <text x="390" y="0" font-family="ui-monospace,Menlo,monospace" font-size="10" fill="#F7DF1E" opacity="0.9">25.0%</text>
+            <rect x="0" y="8" width="400" height="4" fill="#1b2838" rx="2"/>
+            <rect x="0" y="8" width="75" height="4" fill="#F7DF1E" rx="2" filter="url(#glow)">
+               <animate attributeName="width" from="0" to="75" dur="1.5s" fill="freeze" calcMode="spline" keyTimes="0;1" keySplines="0.1, 0.8, 0.3, 1"/>
+            </rect>
+        </g>
+        
+        <g transform="translate(40, 110)">
+            <text x="0" y="0" font-family="ui-monospace,Menlo,monospace" font-size="10" fill="#3572A5" opacity="0.9" filter="url(#glow)">PYTHON</text>
+            <text x="390" y="0" font-family="ui-monospace,Menlo,monospace" font-size="10" fill="#3572A5" opacity="0.9">15.0%</text>
+            <rect x="0" y="8" width="400" height="4" fill="#1b2838" rx="2"/>
+            <rect x="0" y="8" width="45" height="4" fill="#3572A5" rx="2" filter="url(#glow)">
+               <animate attributeName="width" from="0" to="45" dur="1.5s" fill="freeze" calcMode="spline" keyTimes="0;1" keySplines="0.1, 0.8, 0.3, 1"/>
+            </rect>
+        </g>
+        
+        <g transform="translate(40, 135)">
+            <text x="0" y="0" font-family="ui-monospace,Menlo,monospace" font-size="10" fill="#00B4AB" opacity="0.9" filter="url(#glow)">DART</text>
+            <text x="390" y="0" font-family="ui-monospace,Menlo,monospace" font-size="10" fill="#00B4AB" opacity="0.9">10.0%</text>
+            <rect x="0" y="8" width="400" height="4" fill="#1b2838" rx="2"/>
+            <rect x="0" y="8" width="30" height="4" fill="#00B4AB" rx="2" filter="url(#glow)">
+               <animate attributeName="width" from="0" to="30" dur="1.5s" fill="freeze" calcMode="spline" keyTimes="0;1" keySplines="0.1, 0.8, 0.3, 1"/>
+            </rect>
+        </g>
+        
+        <g transform="translate(40, 160)">
+            <text x="0" y="0" font-family="ui-monospace,Menlo,monospace" font-size="10" fill="#E34C26" opacity="0.9" filter="url(#glow)">HTML</text>
+            <text x="390" y="0" font-family="ui-monospace,Menlo,monospace" font-size="10" fill="#E34C26" opacity="0.9">5.0%</text>
+            <rect x="0" y="8" width="400" height="4" fill="#1b2838" rx="2"/>
+            <rect x="0" y="8" width="15" height="4" fill="#E34C26" rx="2" filter="url(#glow)">
+               <animate attributeName="width" from="0" to="15" dur="1.5s" fill="freeze" calcMode="spline" keyTimes="0;1" keySplines="0.1, 0.8, 0.3, 1"/>
+            </rect>
+        </g>
+        
+  </g>
+  
+  <rect x="40" y="175" width="8" height="8" fill="#FF003C" filter="url(#glow)">
+    <animate attributeName="opacity" values="1;0.2;1" dur="1s" repeatCount="indefinite"/>
+  </rect>
+  <text x="55" y="183" font-family="ui-monospace,Menlo,monospace" font-size="9" fill="#FF003C" opacity="0.8">
+    NOW OPERATING: skillparty/skillparty
+  </text>
+</svg>
