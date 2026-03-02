@@ -80,8 +80,8 @@ Stack      Next.js · Flutter · Python · Firebase
 ### `> ls ./projects/`
 
 <div align="center">
-  <a href="https://github.com/skillparty/tiendaCielo">
-    <img src="https://github-readme-stats-sigma-five.vercel.app/api/pin/?username=skillparty&repo=tiendaCielo&bg_color=00000000&hide_border=true&icon_color=58a6ff&title_color=c9d1d9&text_color=8b949e" alt="tiendaCielo" />
+  <a href="https://github.com/skillparty/cielo">
+    <img src="https://github-readme-stats-sigma-five.vercel.app/api/pin/?username=skillparty&repo=cielo&bg_color=00000000&hide_border=true&icon_color=58a6ff&title_color=c9d1d9&text_color=8b949e" alt="cielo" />
   </a>
   <a href="https://github.com/skillparty/skillparty">
     <img src="https://github-readme-stats-sigma-five.vercel.app/api/pin/?username=skillparty&repo=skillparty&bg_color=00000000&hide_border=true&icon_color=58a6ff&title_color=c9d1d9&text_color=8b949e" alt="skillparty" />

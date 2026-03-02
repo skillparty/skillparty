@@ -151,13 +151,20 @@ def generate_black_hole_svg(grid, streak_info, data_source="UNKNOWN"):
     
     COLORS = ["#161B22", "#0E4429", "#006D32", "#26A641", "#39D353"]
 
-    max_dist = ((BH_X - GRID_X) ** 2 + (BH_Y - GRID_Y) ** 2) ** 0.5
+    # Calculate max distance from ANY cell to the BH for normalization
+    corners = [
+        (GRID_X + BLOCK // 2, GRID_Y + BLOCK // 2),
+        (GRID_X + (COLS - 1) * CELL + BLOCK // 2, GRID_Y + BLOCK // 2),
+        (GRID_X + BLOCK // 2, GRID_Y + (ROWS - 1) * CELL + BLOCK // 2),
+        (GRID_X + (COLS - 1) * CELL + BLOCK // 2, GRID_Y + (ROWS - 1) * CELL + BLOCK // 2),
+    ]
+    max_dist = max(((BH_X - cx) ** 2 + (BH_Y - cy) ** 2) ** 0.5 for cx, cy in corners)
 
     def absorb_timing(cx, cy):
         dist = ((BH_X - cx) ** 2 + (BH_Y - cy) ** 2) ** 0.5
         normalized = min(1.0, dist / max_dist)
-        start_t = round(0.08 + normalized * 0.62, 3)
-        impact_t = round(min(0.95, start_t + 0.13), 3)
+        start_t = round(0.08 + normalized * 0.55, 3)
+        impact_t = round(min(0.92, start_t + 0.12), 3)
         return start_t, impact_t
 
     fx_random = random.Random(20260302)
@@ -166,87 +173,87 @@ def generate_black_hole_svg(grid, streak_info, data_source="UNKNOWN"):
     for c in range(COLS):
       for r in range(ROWS):
         val = grid[c][r]
-        cx = GRID_X + c * CELL + BLOCK // 2
-        cy = GRID_Y + r * CELL + BLOCK // 2
+        x0 = GRID_X + c * CELL
+        y0 = GRID_Y + r * CELL
+        cx = x0 + BLOCK // 2
+        cy = y0 + BLOCK // 2
         color = COLORS[val]
 
         start_t, impact_t = absorb_timing(cx, cy)
         lens_t = round(max(0.0, start_t - 0.035), 3)
-        pull_x = round((BH_X - cx) * 0.92, 1)
-        pull_y = round((BH_Y - cy) * 0.92, 1)
-        stretch_dir = "1 1;1 1;0.8 1.25;0.16 0.16" if abs(BH_Y - cy) > 30 else "1 1;1 1;0.85 1.15;0.18 0.18"
-        spin_dir = 360 if (c + r) % 2 == 0 else -360
 
-        grid_lines.append(f'    <g transform="translate({cx},{cy})">')
-        grid_lines.append(f'      <rect x="-7" y="-7" width="14" height="14" rx="3" fill="{color}" opacity="{1.0 if val > 0 else 0.28}">')
+        # Target position: center of BH minus half the shrunk size
+        target_x = BH_X - 1
+        target_y = BH_Y - 1
+        shrunk = 2  # final size before disappearing
 
         if val == 0:
-          grid_lines.append(f'      </rect>')
-          grid_lines.append(f'    </g>')
+          grid_lines.append(f'    <rect x="{x0}" y="{y0}" width="{BLOCK}" height="{BLOCK}" rx="3" fill="{color}" opacity="0.28"/>')
           continue
 
         absorb_end_t = max(absorb_end_t, impact_t)
 
+        # Use simple attribute animations (no additive transforms)
+        grid_lines.append(f'    <rect x="{x0}" y="{y0}" width="{BLOCK}" height="{BLOCK}" rx="3" fill="{color}">')
+
         grid_lines.append(
-          f'        <animateTransform attributeName="transform" type="translate"'
-          f' values="0 0;0 0;{pull_x} {pull_y};{pull_x} {pull_y}"'
+          f'      <animate attributeName="x"'
+          f' values="{x0};{x0};{target_x};{target_x}"'
           f' keyTimes="0;{start_t};{impact_t};1"'
-          f' dur="{DUR}s" begin="0s" repeatCount="indefinite"'
-          f' additive="sum"/>'
-        )
-
-        grid_lines.append(
-          f'        <animateTransform attributeName="transform" type="scale"'
-          f' values="{stretch_dir}"'
-          f' keyTimes="0;{start_t};{round(min(0.97, start_t + 0.04), 3)};{impact_t}"'
-          f' dur="{DUR}s" begin="0s" repeatCount="indefinite"'
-          f' additive="sum"/>'
-        )
-
-        grid_lines.append(
-          f'        <animateTransform attributeName="transform" type="rotate"'
-          f' values="0;0;{spin_dir};{spin_dir}"'
-          f' keyTimes="0;{start_t};{impact_t};1"'
-          f' dur="{DUR}s" begin="0s" repeatCount="indefinite"'
-          f' additive="sum"/>'
-        )
-
-        grid_lines.append(
-          f'        <animate attributeName="opacity"'
-          f' values="1;1;0"'
-          f' keyTimes="0;{start_t};{impact_t}"'
           f' dur="{DUR}s" begin="0s" repeatCount="indefinite"/>'
         )
-
         grid_lines.append(
-          f'        <animate attributeName="fill"'
+          f'      <animate attributeName="y"'
+          f' values="{y0};{y0};{target_y};{target_y}"'
+          f' keyTimes="0;{start_t};{impact_t};1"'
+          f' dur="{DUR}s" begin="0s" repeatCount="indefinite"/>'
+        )
+        grid_lines.append(
+          f'      <animate attributeName="width"'
+          f' values="{BLOCK};{BLOCK};{shrunk};{shrunk}"'
+          f' keyTimes="0;{start_t};{impact_t};1"'
+          f' dur="{DUR}s" begin="0s" repeatCount="indefinite"/>'
+        )
+        grid_lines.append(
+          f'      <animate attributeName="height"'
+          f' values="{BLOCK};{BLOCK};{shrunk};{shrunk}"'
+          f' keyTimes="0;{start_t};{impact_t};1"'
+          f' dur="{DUR}s" begin="0s" repeatCount="indefinite"/>'
+        )
+        grid_lines.append(
+          f'      <animate attributeName="opacity"'
+          f' values="1;1;0.6;0"'
+          f' keyTimes="0;{start_t};{round(start_t + (impact_t - start_t) * 0.7, 3)};{impact_t}"'
+          f' dur="{DUR}s" begin="0s" repeatCount="indefinite"/>'
+        )
+        grid_lines.append(
+          f'      <animate attributeName="fill"'
           f' values="{color};{color};#A855F7;#7C3AED"'
           f' keyTimes="0;{lens_t};{start_t};{impact_t}"'
           f' dur="{DUR}s" begin="0s" repeatCount="indefinite"/>'
         )
 
-        grid_lines.append(f'      </rect>')
+        grid_lines.append(f'    </rect>')
 
+        # Particles trailing toward BH
         for p in range(2):
-          p_offset_x = fx_random.randint(-5, 5)
-          p_offset_y = fx_random.randint(-5, 5)
+          p_offset_x = cx + fx_random.randint(-5, 5)
+          p_offset_y = cy + fx_random.randint(-5, 5)
           particle_delay = round(start_t * DUR + p * 0.18, 2)
           p_color = "#A855F7" if p == 0 else "#00FFFF"
           p_size = 1.6 if p == 0 else 1.2
           grid_lines.append(
-            f'      <circle cx="{p_offset_x}" cy="{p_offset_y}" r="{p_size}" fill="{p_color}" opacity="0">'
-            f'        <animate attributeName="opacity" values="0;0.55;0.35;0" keyTimes="0;0.1;0.7;1"'
+            f'    <circle cx="{p_offset_x}" cy="{p_offset_y}" r="{p_size}" fill="{p_color}" opacity="0">'
+            f'      <animate attributeName="opacity" values="0;0.55;0.35;0" keyTimes="0;0.1;0.7;1"'
             f' dur="1.2s" begin="{particle_delay}s" repeatCount="indefinite"/>'
-            f'        <animate attributeName="cx" values="{p_offset_x};{pull_x * 1.25}" dur="1.5s"'
+            f'      <animate attributeName="cx" values="{p_offset_x};{BH_X}" dur="1.5s"'
             f' begin="{particle_delay}s" repeatCount="indefinite"/>'
-            f'        <animate attributeName="cy" values="{p_offset_y};{pull_y}" dur="1.5s"'
+            f'      <animate attributeName="cy" values="{p_offset_y};{BH_Y}" dur="1.5s"'
             f' begin="{particle_delay}s" repeatCount="indefinite"/>'
-            f'        <animate attributeName="r" values="{p_size};0.5;0" keyTimes="0;0.7;1"'
+            f'      <animate attributeName="r" values="{p_size};0.5;0" keyTimes="0;0.7;1"'
             f' dur="1.5s" begin="{particle_delay}s" repeatCount="indefinite"/>'
-            f'      </circle>'
+            f'    </circle>'
           )
-
-        grid_lines.append(f'    </g>')
 
     grid_svg = "\\n".join(grid_lines)
 
@@ -417,55 +424,64 @@ def generate_black_hole_svg(grid, streak_info, data_source="UNKNOWN"):
 
   <!-- BLACK HOLE -->
   <g transform="translate({BH_X},{BH_Y})">
-    <rect x="-7" y="-7" width="14" height="14" rx="2" fill="#030303" opacity="0.95" filter="url(#glow)">
-      <animate attributeName="x" values="-7;0;0" keyTimes="0;{absorb_end_t};1" dur="{DUR}s" repeatCount="indefinite"/>
-      <animate attributeName="y" values="-7;0;0" keyTimes="0;{absorb_end_t};1" dur="{DUR}s" repeatCount="indefinite"/>
-      <animate attributeName="width" values="14;0;0" keyTimes="0;{absorb_end_t};1" dur="{DUR}s" repeatCount="indefinite"/>
-      <animate attributeName="height" values="14;0;0" keyTimes="0;{absorb_end_t};1" dur="{DUR}s" repeatCount="indefinite"/>
-      <animate attributeName="opacity" values="0.95;0.12;0" keyTimes="0;{absorb_end_t};1" dur="{DUR}s" repeatCount="indefinite"/>
+    <!-- Seed square (initial form, fades as BH takes over) -->
+    <rect x="-7" y="-7" width="14" height="14" rx="2" fill="#1a0030" stroke="#7C3AED" stroke-width="0.6" opacity="0.9">
+      <animate attributeName="opacity" values="0.9;0.15;0" keyTimes="0;0.15;{absorb_end_t}" dur="{DUR}s" repeatCount="indefinite"/>
     </rect>
     
     <!-- Gravitational distortion waves -->
     <circle r="7" fill="none" stroke="#7C3AED" stroke-width="0.8" opacity="0" filter="url(#glowStrong)">
-      <animate attributeName="r" values="7;118;118" keyTimes="0;{absorb_end_t};1" dur="{DUR}s" repeatCount="indefinite"/>
-      <animate attributeName="opacity" values="0.28;0.06;0.06" keyTimes="0;{absorb_end_t};1" dur="{DUR}s" repeatCount="indefinite"/>
+      <animate attributeName="r" values="7;80;140" keyTimes="0;{absorb_end_t};1" dur="{DUR}s" repeatCount="indefinite"/>
+      <animate attributeName="opacity" values="0;0.22;0.04" keyTimes="0;{absorb_end_t};1" dur="{DUR}s" repeatCount="indefinite"/>
     </circle>
-    <circle r="6" fill="none" stroke="#00FFFF" stroke-width="0.5" opacity="0" filter="url(#glow)">
-      <animate attributeName="r" values="6;96;96" keyTimes="0;{absorb_end_t};1" dur="{DUR}s" repeatCount="indefinite"/>
-      <animate attributeName="opacity" values="0.2;0.03;0.03" keyTimes="0;{absorb_end_t};1" dur="{DUR}s" repeatCount="indefinite"/>
+    <circle r="5" fill="none" stroke="#00FFFF" stroke-width="0.5" opacity="0" filter="url(#glow)">
+      <animate attributeName="r" values="5;60;110" keyTimes="0;{absorb_end_t};1" dur="{DUR}s" repeatCount="indefinite"/>
+      <animate attributeName="opacity" values="0;0.15;0.03" keyTimes="0;{absorb_end_t};1" dur="{DUR}s" repeatCount="indefinite"/>
     </circle>
     
-    <circle r="7" fill="url(#bhGlow)" opacity="0.4" filter="url(#glowHeavy)">
-      <animate attributeName="r" values="7;88;88" keyTimes="0;{absorb_end_t};1" dur="{DUR}s" repeatCount="indefinite"/>
-      <animate attributeName="opacity" values="0.26;0.45;0.45" keyTimes="0;{absorb_end_t};1" dur="{DUR}s" repeatCount="indefinite"/>
+    <!-- Glow aura (grows as BH absorbs) -->
+    <circle r="7" fill="url(#bhGlow)" opacity="0" filter="url(#glowHeavy)">
+      <animate attributeName="r" values="7;55;100" keyTimes="0;{absorb_end_t};1" dur="{DUR}s" repeatCount="indefinite"/>
+      <animate attributeName="opacity" values="0.1;0.4;0.5" keyTimes="0;{absorb_end_t};1" dur="{DUR}s" repeatCount="indefinite"/>
     </circle>
-    <ellipse rx="7" ry="2" fill="none" stroke="url(#accretion1)" stroke-width="3" opacity="0.6" filter="url(#glowStrong)">
-      <animate attributeName="rx" values="7;56;56" keyTimes="0;{absorb_end_t};1" dur="{DUR}s" repeatCount="indefinite"/>
-      <animate attributeName="ry" values="2;14;14" keyTimes="0;{absorb_end_t};1" dur="{DUR}s" repeatCount="indefinite"/>
+    
+    <!-- Accretion disk 1 -->
+    <ellipse rx="5" ry="1.5" fill="none" stroke="url(#accretion1)" stroke-width="3" opacity="0" filter="url(#glowStrong)">
+      <animate attributeName="rx" values="5;38;68" keyTimes="0;{absorb_end_t};1" dur="{DUR}s" repeatCount="indefinite"/>
+      <animate attributeName="ry" values="1.5;10;18" keyTimes="0;{absorb_end_t};1" dur="{DUR}s" repeatCount="indefinite"/>
+      <animate attributeName="opacity" values="0;0.6;0.7" keyTimes="0;{absorb_end_t};1" dur="{DUR}s" repeatCount="indefinite"/>
       <animateTransform attributeName="transform" type="rotate" from="0" to="360" dur="5.2s" repeatCount="indefinite"/>
     </ellipse>
-    <ellipse rx="6" ry="2" fill="none" stroke="url(#accretion2)" stroke-width="2" opacity="0.5" filter="url(#glow)">
-      <animate attributeName="rx" values="6;40;40" keyTimes="0;{absorb_end_t};1" dur="{DUR}s" repeatCount="indefinite"/>
-      <animate attributeName="ry" values="2;10;10" keyTimes="0;{absorb_end_t};1" dur="{DUR}s" repeatCount="indefinite"/>
+    <!-- Accretion disk 2 -->
+    <ellipse rx="4" ry="1.2" fill="none" stroke="url(#accretion2)" stroke-width="2" opacity="0" filter="url(#glow)">
+      <animate attributeName="rx" values="4;28;50" keyTimes="0;{absorb_end_t};1" dur="{DUR}s" repeatCount="indefinite"/>
+      <animate attributeName="ry" values="1.2;7;13" keyTimes="0;{absorb_end_t};1" dur="{DUR}s" repeatCount="indefinite"/>
+      <animate attributeName="opacity" values="0;0.5;0.55" keyTimes="0;{absorb_end_t};1" dur="{DUR}s" repeatCount="indefinite"/>
       <animateTransform attributeName="transform" type="rotate" from="360" to="0" dur="4.8s" repeatCount="indefinite"/>
     </ellipse>
-    <ellipse rx="5" ry="1.6" fill="none" stroke="#00FFFF" stroke-width="1.2" opacity="0.45" filter="url(#glow)">
-      <animate attributeName="rx" values="5;28;28" keyTimes="0;{absorb_end_t};1" dur="{DUR}s" repeatCount="indefinite"/>
-      <animate attributeName="ry" values="1.6;7;7" keyTimes="0;{absorb_end_t};1" dur="{DUR}s" repeatCount="indefinite"/>
+    <!-- Accretion disk 3 -->
+    <ellipse rx="3" ry="1" fill="none" stroke="#00FFFF" stroke-width="1.2" opacity="0" filter="url(#glow)">
+      <animate attributeName="rx" values="3;20;36" keyTimes="0;{absorb_end_t};1" dur="{DUR}s" repeatCount="indefinite"/>
+      <animate attributeName="ry" values="1;5;9" keyTimes="0;{absorb_end_t};1" dur="{DUR}s" repeatCount="indefinite"/>
+      <animate attributeName="opacity" values="0;0.45;0.5" keyTimes="0;{absorb_end_t};1" dur="{DUR}s" repeatCount="indefinite"/>
       <animateTransform attributeName="transform" type="rotate" from="0" to="360" dur="4.1s" repeatCount="indefinite"/>
     </ellipse>
-    <circle r="7" fill="none" stroke="#9333EA" stroke-width="1.3" filter="url(#glowStrong)">
-      <animate attributeName="r" values="7;24;24" keyTimes="0;{absorb_end_t};1" dur="{DUR}s" repeatCount="indefinite"/>
-      <animate attributeName="opacity" values="0.58;0.82;0.82" keyTimes="0;{absorb_end_t};1" dur="{DUR}s" repeatCount="indefinite"/>
+    
+    <!-- Event horizon ring -->
+    <circle r="5" fill="none" stroke="#9333EA" stroke-width="1.5" opacity="0" filter="url(#glowStrong)">
+      <animate attributeName="r" values="5;18;40" keyTimes="0;{absorb_end_t};1" dur="{DUR}s" repeatCount="indefinite"/>
+      <animate attributeName="opacity" values="0;0.75;0.85" keyTimes="0;{absorb_end_t};1" dur="{DUR}s" repeatCount="indefinite"/>
     </circle>
-    <circle r="7" fill="url(#bhCore)">
-      <animate attributeName="r" values="7;20;20" keyTimes="0;{absorb_end_t};1" dur="{DUR}s" repeatCount="indefinite"/>
+    
+    <!-- BH core (dark center, grows as it feeds) -->
+    <circle r="4" fill="url(#bhCore)">
+      <animate attributeName="r" values="4;14;32" keyTimes="0;{absorb_end_t};1" dur="{DUR}s" repeatCount="indefinite"/>
     </circle>
-    <circle r="3.2" fill="#000000">
-      <animate attributeName="r" values="3.2;8;8" keyTimes="0;{absorb_end_t};1" dur="{DUR}s" repeatCount="indefinite"/>
+    <circle r="2" fill="#000000">
+      <animate attributeName="r" values="2;8;22" keyTimes="0;{absorb_end_t};1" dur="{DUR}s" repeatCount="indefinite"/>
     </circle>
-    <circle r="1.2" fill="#000000">
-      <animate attributeName="r" values="1.2;2.4;2.4" keyTimes="0;{absorb_end_t};1" dur="{DUR}s" repeatCount="indefinite"/>
+    <circle r="0.8" fill="#000000">
+      <animate attributeName="r" values="0.8;3;10" keyTimes="0;{absorb_end_t};1" dur="{DUR}s" repeatCount="indefinite"/>
     </circle>
   </g>
 
