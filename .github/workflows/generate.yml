@@ -2,7 +2,7 @@ name: Generate Profile Assets
 
 on:
   schedule:
-    - cron: "0 0 1 * *"
+    - cron: "0 6 * * *"
   workflow_dispatch:
   push:
     branches:
@@ -43,8 +43,8 @@ jobs:
         with:
           github_user_name: skillparty
           outputs: |
-            dist/github-contribution-grid-snake.svg?palette=github-light
-            dist/github-contribution-grid-snake-dark.svg?palette=github-dark
+            dist/github-contribution-grid-snake.svg?palette=github-light&color_snake=%2300FFFF&color_dots=%230A0A0A,%230E4429,%231F6F5C,%232DD4BF,%23A855F7
+            dist/github-contribution-grid-snake-dark.svg?palette=github-dark&color_snake=%2300FFFF&color_dots=%230A0A0A,%230E4429,%231F6F5C,%232DD4BF,%23A855F7
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
@@ -57,6 +57,16 @@ jobs:
           for f in dist/*.svg; do
             echo "$(basename $f): $(wc -c < $f) bytes"
           done
+
+      # ── Step 3b: Guard against shipping simulated (fake) data ──
+      - name: Detect simulated data
+        run: |
+          if grep -rlq "SIMULATED" dist/; then
+            echo "::warning::Profile assets contain SIMULATED data. Set the GH_PAT secret (PAT with read:user + repo scopes) so languages and contributions use real GitHub data."
+            grep -rl "SIMULATED" dist/ || true
+          else
+            echo "All assets use real GitHub data."
+          fi
 
       # ── Step 4: Publish everything to output branch ──
       - name: Publish to output branch
