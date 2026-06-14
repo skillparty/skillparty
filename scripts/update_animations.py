@@ -3,12 +3,24 @@ import requests
 import json
 import random
 import traceback
+import re
 from datetime import datetime, timedelta
 
 GITHUB_TOKEN = os.environ.get("GITHUB_TOKEN")
 USER = os.environ.get("GITHUB_REPOSITORY_OWNER", "skillparty")
+REPO = os.environ.get("GITHUB_REPOSITORY", f"{USER}/{USER}")
+REQUEST_TIMEOUT = 12
+CONTRIB_CACHE_URL = f"https://raw.githubusercontent.com/{REPO}/output/contrib-cache.json"
 
 HEADERS = {"Authorization": f"Bearer {GITHUB_TOKEN}"} if GITHUB_TOKEN else {}
+HTML_HEADERS = {
+    "User-Agent": "skillparty-profile-assets/1.0",
+    "Accept": "text/html",
+}
+REAL_SOURCES = {"REAL_API", "REAL_HTML", "REAL_CACHE"}
+
+def is_real_data(source):
+    return source in REAL_SOURCES
 
 def fetch_contributions():
     """Returns (grid, streak_info) where streak_info = {current, longest, total}"""
@@ -34,21 +46,39 @@ def fetch_contributions():
         response = requests.post(
             "https://api.github.com/graphql",
             json={"query": query, "variables": {"user": USER}},
-            headers=HEADERS
+            headers=HEADERS,
+            timeout=REQUEST_TIMEOUT,
         )
 
         if response.status_code == 200:
             data = response.json()
             print("Contributions data response:")
             print(json.dumps(data, indent=2)[:500] + "...")
-            if "errors" not in data:
-                grid, streak_info = process_github_contribs(data)
-                return grid, streak_info, "REAL"
-            print("GraphQL Error:", data["errors"])
+            errors = data.get("errors")
+            if not errors:
+                grid, streak_info, days = process_github_contribs(data)
+                if grid and days:
+                    write_contrib_cache(days, "REAL_API")
+                    return grid, streak_info, "REAL_API"
+            if errors:
+                print("GraphQL Error:", errors)
         else:
             print("Failed to fetch data:", response.status_code, response.text)
     else:
-        print("No GITHUB_TOKEN provided, falling back to simulated data.")
+        print("No GITHUB_TOKEN provided, falling back to HTML/cache.")
+
+    html_days = fetch_contributions_html()
+    if html_days:
+        grid = build_grid_from_days(html_days)
+        streak_info = calculate_streaks_from_days(html_days)
+        write_contrib_cache(html_days, "REAL_HTML")
+        return grid, streak_info, "REAL_HTML"
+
+    cache_days = read_contrib_cache()
+    if cache_days:
+        grid = build_grid_from_days(cache_days)
+        streak_info = calculate_streaks_from_days(cache_days)
+        return grid, streak_info, "REAL_CACHE"
 
     grid, streak_info = simulate_contributions()
     return grid, streak_info, "SIMULATED"
@@ -74,71 +104,149 @@ def simulate_contributions():
         grid.append(col)
     return grid, {"current": random.randint(3, 15), "longest": random.randint(20, 60), "total": random.randint(400, 1200)}
 
-def calculate_streaks(weeks_data):
-    """Calculate current streak, longest streak, and total contributions from raw weeks data."""
-    all_days = []
-    for w in weeks_data:
-        for d in w["contributionDays"]:
-            all_days.append({"count": d["contributionCount"], "date": d["date"]})
-    
-    total = sum(d["count"] for d in all_days)
-    
-    # Calculate streaks
+def normalize_days(days):
+    if not days:
+        return []
+    day_map = {}
+    for d in days:
+        day_map[d["date"]] = int(d["count"])
+    return [{"date": date, "count": day_map[date]} for date in sorted(day_map.keys())]
+
+def calculate_streaks_from_days(days):
+    """Calculate current streak, longest streak, and total contributions from day list."""
+    ordered = normalize_days(days)
+    total = sum(d["count"] for d in ordered)
+
     current_streak = 0
     longest_streak = 0
     streak = 0
-    
-    for d in all_days:
+
+    for d in ordered:
         if d["count"] > 0:
             streak += 1
             longest_streak = max(longest_streak, streak)
         else:
             streak = 0
-    
-    # Current streak: count backwards from today
-    for d in reversed(all_days):
+
+    for d in reversed(ordered):
         if d["count"] > 0:
             current_streak += 1
         else:
             break
-    
+
     return {"current": current_streak, "longest": longest_streak, "total": total}
+
+def map_count_to_level(count):
+    if count == 0:
+        return 0
+    if count <= 3:
+        return 1
+    if count <= 8:
+        return 2
+    if count <= 14:
+        return 3
+    return 4
+
+def build_grid_from_days(days):
+    ordered = normalize_days(days)
+    if not ordered:
+        return []
+
+    levels = [map_count_to_level(d["count"]) for d in ordered]
+    needed = 42 * 7
+    levels = levels[-needed:]
+    if len(levels) < needed:
+        levels = [0] * (needed - len(levels)) + levels
+
+    grid = []
+    for i in range(42):
+        start = i * 7
+        grid.append(levels[start:start + 7])
+    return grid
 
 def process_github_contribs(data):
     try:
         calendar = data["data"]["user"]["contributionsCollection"]["contributionCalendar"]
         weeks = calendar["weeks"]
-        
-        streak_info = calculate_streaks(weeks)
-        
         days = []
         for w in weeks:
             for d in w["contributionDays"]:
-                count = d["contributionCount"]
-                if count == 0: val = 0
-                elif count <= 3: val = 1
-                elif count <= 8: val = 2
-                elif count <= 14: val = 3
-                else: val = 4
-                days.append(val)
-                
-        # We need exactly 294 days (42 cols x 7 rows)
-        needed = 42 * 7
-        days = days[-needed:]
-        
-        # Pad if not enough
-        if len(days) < needed:
-            days = [0]*(needed - len(days)) + days
-            
-        grid = []
-        for i in range(42):
-            start = i * 7
-            grid.append(days[start:start+7])
-        return grid, streak_info
+                days.append({"count": d["contributionCount"], "date": d["date"]})
+
+        days = normalize_days(days)
+        if not days:
+            return None, None, []
+
+        streak_info = calculate_streaks_from_days(days)
+        grid = build_grid_from_days(days)
+        return grid, streak_info, days
     except Exception as e:
         print(f"Error parsing contributions: {e}")
         traceback.print_exc()
-        return simulate_contributions()
+        return None, None, []
+
+def parse_contributions_html(html):
+    matches = re.findall(r'data-date="(\d{4}-\d{2}-\d{2})"[^>]*data-count="(\d+)"', html)
+    if not matches:
+        reversed_matches = re.findall(r'data-count="(\d+)"[^>]*data-date="(\d{4}-\d{2}-\d{2})"', html)
+        matches = [(date, count) for count, date in reversed_matches]
+
+    if not matches:
+        return []
+
+    days = []
+    for date, count in matches:
+        days.append({"date": date, "count": int(count)})
+    return normalize_days(days)
+
+def fetch_contributions_html():
+    try:
+        url = f"https://github.com/users/{USER}/contributions"
+        response = requests.get(url, headers=HTML_HEADERS, timeout=REQUEST_TIMEOUT)
+        if response.status_code != 200:
+            print("HTML contributions fetch failed:", response.status_code)
+            return []
+        days = parse_contributions_html(response.text)
+        if not days:
+            print("HTML contributions parse returned no days")
+        return days
+    except Exception as e:
+        print(f"HTML contributions error: {e}")
+        traceback.print_exc()
+        return []
+
+def read_contrib_cache():
+    local_path = "dist/contrib-cache.json"
+    if os.path.exists(local_path):
+        try:
+            with open(local_path, "r") as f:
+                payload = json.load(f)
+            days = payload.get("days", [])
+            return normalize_days(days)
+        except Exception as e:
+            print(f"Local cache read error: {e}")
+
+    try:
+        response = requests.get(CONTRIB_CACHE_URL, timeout=REQUEST_TIMEOUT)
+        if response.status_code != 200:
+            print("Cache fetch failed:", response.status_code)
+            return []
+        payload = response.json()
+        days = payload.get("days", [])
+        return normalize_days(days)
+    except Exception as e:
+        print(f"Remote cache error: {e}")
+        return []
+
+def write_contrib_cache(days, source):
+    os.makedirs("dist", exist_ok=True)
+    payload = {
+        "updated_at": datetime.utcnow().strftime("%Y-%m-%dT%H:%M:%SZ"),
+        "source": source,
+        "days": normalize_days(days),
+    }
+    with open("dist/contrib-cache.json", "w") as f:
+        json.dump(payload, f, indent=2)
 
 def generate_black_hole_svg(grid, streak_info, data_source="UNKNOWN"):
     COLS, ROWS = 42, 7
@@ -236,7 +344,7 @@ def generate_black_hole_svg(grid, streak_info, data_source="UNKNOWN"):
         grid_lines.append(f'    </rect>')
 
         # Particles trailing toward BH
-        for p in range(2):
+        for p in range(1):
           p_offset_x = cx + fx_random.randint(-5, 5)
           p_offset_y = cy + fx_random.randint(-5, 5)
           particle_delay = round(start_t * DUR + p * 0.18, 2)
@@ -510,7 +618,7 @@ def generate_black_hole_svg(grid, streak_info, data_source="UNKNOWN"):
   </g>
 
   <g filter="url(#glow)">
-    <text x="24" y="318" font-family="ui-monospace,SFMono-Regular,Menlo,monospace" font-size="10" fill="{('#39D353' if data_source == 'REAL' else '#F97316')}" opacity="0.85">
+    <text x="24" y="318" font-family="ui-monospace,SFMono-Regular,Menlo,monospace" font-size="10" fill="{('#39D353' if is_real_data(data_source) else '#F97316')}" opacity="0.85">
       DATA SOURCE: {data_source}
       <animate attributeName="opacity" values="0.6;0.82;0.6" dur="3.4s" repeatCount="indefinite"/>
     </text>
@@ -562,7 +670,8 @@ def fetch_languages():
     response = requests.post(
         "https://api.github.com/graphql",
         json={"query": query, "variables": {"user": USER}},
-        headers=HEADERS
+      headers=HEADERS,
+      timeout=REQUEST_TIMEOUT,
     )
     if response.status_code == 200:
         data = response.json()
@@ -596,7 +705,7 @@ def fetch_languages():
                 
             # Get last active repo
             last_repo = repos[0]["name"] if repos else "unknown"
-            return results, last_repo, "REAL"
+            return results, last_repo, "REAL_API"
         except Exception as e:
             print(f"Error parsing languages: {e}")
             traceback.print_exc()
@@ -678,11 +787,64 @@ def generate_cyber_langs(langs, last_repo, data_source="UNKNOWN"):
   <text x="55" y="{H-17}" font-family="ui-monospace,Menlo,monospace" font-size="9" fill="#FF003C" opacity="0.8">
     NOW OPERATING: {last_repo}
   </text>
-  <text x="300" y="{H-17}" font-family="ui-monospace,Menlo,monospace" font-size="9" fill="{('#39D353' if data_source == 'REAL' else '#F97316')}" opacity="0.85">
+  <text x="300" y="{H-17}" font-family="ui-monospace,Menlo,monospace" font-size="9" fill="{('#39D353' if is_real_data(data_source) else '#F97316')}" opacity="0.85">
     DATA: {data_source}
   </text>
 </svg>'''
     with open("dist/cyber-langs.svg", "w") as f:
+        f.write(svg)
+
+def generate_ascii_art_svg():
+    W, H = 680, 170
+    lines = [
+        "  ___  _    _  _  _  ___              _            ",
+        " / __|| |__(_)| || || _ \\ __ _  _ _ | |_  _  _   ",
+        " \\__ \\| / /| || || ||  _// _` || '_||  _|| || |  ",
+        " |___/|_\\_\\|_||_||_||_|  \\__,_||_|   \\__| \\_, |  ",
+        "                                          |__/   ",
+    ]
+
+    start_y = 48
+    line_height = 22
+    text_lines = []
+    for idx, line in enumerate(lines):
+        y = start_y + idx * line_height
+        delay = round(idx * 0.15, 2)
+        text_lines.append(
+          f'<text x="50%" y="{y}" text-anchor="middle" xml:space="preserve" '
+            f'font-family="ui-monospace,SFMono-Regular,Menlo,monospace" '
+            f'font-size="14" fill="url(#asciiGradient)" opacity="0.0" filter="url(#glow)">' 
+            f'{line}'
+            f'<animate attributeName="opacity" values="0;0.9" dur="0.4s" begin="{delay}s" fill="freeze"/>'
+            f'<animate attributeName="opacity" values="0.85;0.65;0.85" dur="6s" begin="{delay}s" repeatCount="indefinite"/>'
+            f'</text>'
+        )
+
+    text_svg = "\n".join(text_lines)
+
+    svg = f'''<svg width="{W}" height="{H}" viewBox="0 0 {W} {H}" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="asciiGradient" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0%" stop-color="#00FF41"/>
+      <stop offset="50%" stop-color="#00FFFF"/>
+      <stop offset="100%" stop-color="#7C3AED"/>
+    </linearGradient>
+    <filter id="glow">
+      <feGaussianBlur stdDeviation="1.4" result="b"/>
+      <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+  </defs>
+
+  <rect width="{W}" height="{H}" rx="10" fill="#0A0A0A" stroke="#1B2838" stroke-width="1"/>
+
+{text_svg}
+
+  <rect x="0" y="0" width="{W}" height="2" fill="#00FF41" opacity="0.08">
+    <animateTransform attributeName="transform" type="translate" values="0 0;0 {H - 2};0 0" dur="6s" repeatCount="indefinite"/>
+  </rect>
+</svg>'''
+
+    with open("dist/ascii-art.svg", "w") as f:
         f.write(svg)
 
 def generate_header_svg():
@@ -809,7 +971,7 @@ print(f"Token present: {bool(GITHUB_TOKEN)}")
 if GITHUB_TOKEN:
     print(f"Token starts with: {GITHUB_TOKEN[:8]}...")
     # Quick auth test
-    test_r = requests.get("https://api.github.com/user", headers=HEADERS)
+    test_r = requests.get("https://api.github.com/user", headers=HEADERS, timeout=REQUEST_TIMEOUT)
     print(f"Auth test: {test_r.status_code}")
     if test_r.status_code == 200:
         print(f"Authenticated as: {test_r.json().get('login')}")
@@ -821,6 +983,9 @@ data_source = {"contributions": "unknown", "languages": "unknown"}
 try:
     print("Generating Header SVG...")
     generate_header_svg()
+
+    print("Generating ASCII Art SVG...")
+    generate_ascii_art_svg()
 
     print("Fetching contributions...")
     grid, streak_info, contributions_source = fetch_contributions()

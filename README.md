@@ -1,15 +1,11 @@
-```
-        __   __ __  __                 __      
-  ___  / /_ (_)/ // /  ___  ___ _ ____/ /_ __ __
- (_-< /  '_// // // /  / _ \/ _ `// __/ __// // /
-/___//_/\_\/_//_//_/  / .__/\_,_//_/  \__/ \_, / 
-                     /_/                  /___/  
-```
+<div align="center">
+  <img src="https://raw.githubusercontent.com/skillparty/skillparty/output/ascii-art.svg" alt="skillparty ascii" />
+</div>
 
 <div align="center">
 
   <a href="https://github.com/skillparty">
-    <img src="https://readme-typing-svg.demolab.com?font=Fira+Code&weight=400&size=16&duration=3000&pause=1500&color=8b949e&center=true&vCenter=true&repeat=true&width=400&height=30&lines=Full+Stack+Developer+%C2%B7+Bolivia+%F0%9F%87%A7%F0%9F%87%B4;Next.js+%C2%B7+Flutter+%C2%B7+Python+%C2%B7+Firebase" alt="Typing SVG" />
+    <img src="https://raw.githubusercontent.com/skillparty/skillparty/output/header-typing.svg" alt="Header" width="100%" />
   </a>
 
   <br/><br/>
@@ -46,15 +42,7 @@ Stack      Next.js · Flutter · Python · Firebase
   <a href="https://github.com/skillparty">
     <img height="165" src="https://github-readme-stats-sigma-five.vercel.app/api?username=skillparty&show_icons=true&bg_color=00000000&hide_border=true&icon_color=58a6ff&title_color=c9d1d9&text_color=8b949e&include_all_commits=true&count_private=true" alt="Stats"/>
   </a>
-  <a href="https://github.com/skillparty">
-    <img height="165" src="https://github-readme-stats-sigma-five.vercel.app/api/top-langs/?username=skillparty&layout=compact&bg_color=00000000&hide_border=true&title_color=c9d1d9&text_color=8b949e&langs_count=6" alt="Languages"/>
-  </a>
-</div>
-
-<div align="center">
-  <a href="https://github.com/skillparty">
-    <img src="https://streak-stats.demolab.com?user=skillparty&theme=transparent&hide_border=true&ring=58a6ff&fire=f97316&currStreakLabel=c9d1d9&sideLabels=8b949e&currStreakNum=c9d1d9&sideNums=8b949e&dates=484f58" height="165" alt="Streak"/>
-  </a>
+  <img height="165" src="https://raw.githubusercontent.com/skillparty/skillparty/output/cyber-langs.svg" alt="Languages"/>
 </div>
 
 ---
