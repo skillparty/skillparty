@@ -46,6 +46,49 @@ def _typed_tspans(line, begin, per_char=0.045):
     return "".join(out), end
 
 
+BOOT_LINES = [
+    ("[  OK  ]", "mounting /dev/creativity"),
+    ("[  OK  ]", "starting flutter.service"),
+    ("[  OK  ]", "npm run dev --turbo"),
+    ("[ BOOT ]", "initializing skillparty..."),
+]
+
+
+def _boot_sequence(left):
+    """Fast boot log that flashes before the logo, then fades out."""
+    out = []
+    for i, (tag, msg) in enumerate(BOOT_LINES):
+        y = 78 + i * 18
+        delay = round(0.1 + i * 0.22, 2)
+        out.append(
+            f'    <text x="{left}" y="{y}" font-family="{MONO}" font-size="12" opacity="0">'
+            f'<tspan fill="{GREEN}">{tag}</tspan><tspan fill="{MUTED}"> {msg}</tspan>'
+            f'<animate attributeName="opacity" values="0;0.9" dur="0.06s" begin="{delay}s" fill="freeze"/>'
+            f"</text>"
+        )
+    return (
+        f'  <g>\n' + "\n".join(out) + "\n"
+        f'    <animate attributeName="opacity" values="1;1;0" keyTimes="0;0.82;1" dur="1.7s" begin="0s" fill="freeze"/>\n'
+        f"  </g>"
+    )
+
+
+def _matrix_rain(width, height):
+    """Faint katakana rain behind the logo — echoes the singularity section."""
+    chars = "01スキルパーティコード"
+    cols = [(60, 5.2), (150, 4.1), (240, 6.0), (960, 4.6), (1050, 5.5), (1140, 4.3)]
+    out = []
+    for i, (x, dur) in enumerate(cols):
+        ch = chars[i % len(chars)]
+        op = round(0.05 + (i % 3) * 0.03, 2)
+        out.append(
+            f'    <text x="{x}" font-family="{MONO}" font-size="12" fill="{GREEN}" opacity="{op}">{ch}'
+            f'<animate attributeName="y" values="30;{height - 30}" dur="{dur}s" repeatCount="indefinite"/>'
+            f"</text>"
+        )
+    return "\n".join(out)
+
+
 def generate_hero_svg(user):
     W, H = 1200, 300
     rows = _ascii_rows("SKILLPARTY")
@@ -55,7 +98,7 @@ def generate_hero_svg(user):
     line_h = 17
     for idx, row in enumerate(rows):
         y = ascii_y + idx * line_h
-        delay = round(0.12 + idx * 0.12, 2)
+        delay = round(1.7 + idx * 0.12, 2)
         ascii_lines.append(
             f'  <text x="600" y="{y}" text-anchor="middle" xml:space="preserve" '
             f'font-family="{MONO}" font-size="13" fill="url(#nameGradient)" '
@@ -68,7 +111,7 @@ def generate_hero_svg(user):
 
     # Terminal session under the name
     LEFT = 300
-    cmd1, t1 = _typed_tspans("whoami", 1.3)
+    cmd1, t1 = _typed_tspans("whoami", 2.9)
     out1, t2 = _typed_tspans("Jose Alejandro Rollano — Freelance Software Developer", t1 + 0.25)
     cmd2, t3 = _typed_tspans("cat ~/stack.txt", t2 + 0.35)
     out2, t4 = _typed_tspans("Next.js · React · TypeScript · Flutter · Python · Firebase", t3 + 0.25)
@@ -87,18 +130,44 @@ def generate_hero_svg(user):
       <stop offset="50%" stop-color="{CYAN}" stop-opacity="0.35"/>
       <stop offset="100%" stop-color="{CYAN}" stop-opacity="0"/>
     </linearGradient>
+    <pattern id="crt" width="4" height="4" patternUnits="userSpaceOnUse">
+      <rect width="4" height="1.5" fill="#000000" opacity="0.14"/>
+    </pattern>
+    <filter id="rgbGlitch">
+      <feOffset in="SourceGraphic" dx="0" dy="0" result="r">
+        <animate attributeName="dx" values="0;0;3;-2;1;0;0" keyTimes="0;0.9;0.92;0.94;0.96;0.98;1" dur="7s" repeatCount="indefinite"/>
+      </feOffset>
+      <feOffset in="SourceGraphic" dx="0" dy="0" result="b">
+        <animate attributeName="dx" values="0;0;-3;2;-1;0;0" keyTimes="0;0.9;0.92;0.94;0.96;0.98;1" dur="7s" repeatCount="indefinite"/>
+      </feOffset>
+      <feColorMatrix in="r" type="matrix" values="1 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 1 0" result="red"/>
+      <feColorMatrix in="b" type="matrix" values="0 0 0 0 0  0 0 0 0 0  0 0 1 0 0  0 0 0 1 0" result="blue"/>
+      <feBlend in="red" in2="blue" mode="screen" result="split"/>
+      <feBlend in="SourceGraphic" in2="split" mode="screen"/>
+    </filter>
 {GLOW_FILTERS}
   </defs>
 
   <rect width="{W}" height="{H}" rx="12" fill="{BG}" stroke="{BORDER}" stroke-width="1"/>
 {titlebar(W, f"alejandro@{user}: ~/profile — bash")}
 
+  <!-- matrix rain, behind everything -->
+  <g filter="url(#glowSoft)">
+{_matrix_rain(W, H)}
+  </g>
+
+  <!-- boot sequence, flashes then fades -->
+{_boot_sequence(300)}
+
+  <!-- ASCII name with periodic RGB-split glitch -->
+  <g filter="url(#rgbGlitch)">
 {ascii_svg}
+  </g>
 
   <!-- typed session -->
-  <text x="{LEFT}" y="192" font-family="{MONO}" font-size="13" fill="{GREEN}" opacity="0.9">$ <tspan fill="{TEXT}">{cmd1}</tspan></text>
+  <text x="{LEFT}" y="192" font-family="{MONO}" font-size="13" fill="{GREEN}" opacity="0">$ <tspan fill="{TEXT}">{cmd1}</tspan><animate attributeName="opacity" values="0;0.9" dur="0.05s" begin="2.85s" fill="freeze"/></text>
   <text x="{LEFT}" y="214" font-family="{MONO}" font-size="13" fill="{TEXT}" opacity="0.92">{out1}</text>
-  <text x="{LEFT}" y="238" font-family="{MONO}" font-size="13" fill="{GREEN}" opacity="0.9">$ <tspan fill="{TEXT}">{cmd2}</tspan></text>
+  <text x="{LEFT}" y="238" font-family="{MONO}" font-size="13" fill="{GREEN}" opacity="0">$ <tspan fill="{TEXT}">{cmd2}</tspan><animate attributeName="opacity" values="0;0.9" dur="0.05s" begin="{t2 + 0.3}s" fill="freeze"/></text>
   <text x="{LEFT}" y="260" font-family="{MONO}" font-size="13" fill="{CYAN}" opacity="0.9" filter="url(#glowSoft)">{out2}</text>
 
   <!-- blinking cursor after last output -->
@@ -110,6 +179,9 @@ def generate_hero_svg(user):
   <rect x="1" y="34" width="{W - 2}" height="3" fill="url(#heroScan)" opacity="0.35">
     <animate attributeName="y" values="34;{H - 6};34" dur="9s" repeatCount="indefinite"/>
   </rect>
+
+  <!-- CRT texture over the whole tube -->
+  <rect x="1" y="33" width="{W - 2}" height="{H - 34}" fill="url(#crt)" opacity="0.5"/>
 
   <!-- status bar -->
   <line x1="20" y1="{H - 22}" x2="{W - 20}" y2="{H - 22}" stroke="{BORDER}" stroke-width="1"/>
