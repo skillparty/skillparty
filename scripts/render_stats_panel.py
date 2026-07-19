@@ -36,9 +36,41 @@ def _lang_bars(langs):
     return "\n".join(out)
 
 
+def _sparkline(recent, x, y, w, h):
+    """42-day contribution sparkline with animated draw and live end dot."""
+    if not recent or max(recent) == 0:
+        return ""
+    mx = max(recent)
+    n = len(recent)
+    pts = [
+        (round(x + (i / (n - 1)) * w, 1), round(y + h - (v / mx) * h, 1))
+        for i, v in enumerate(recent)
+    ]
+    poly = " ".join(f"{px},{py}" for px, py in pts)
+    area = (
+        f"M{pts[0][0]},{y + h} L"
+        + " L".join(f"{px},{py}" for px, py in pts)
+        + f" L{pts[-1][0]},{y + h} Z"
+    )
+    lx, ly = pts[-1]
+    return f'''  <text x="{x - 100}" y="{y + h - 8}" font-family="{MONO}" font-size="9" fill="{MUTED}" letter-spacing="1">ACTIVITY</text>
+  <text x="{x - 100}" y="{y + h + 4}" font-family="{MONO}" font-size="9" fill="{DIM}">42 DAYS</text>
+  <path d="{area}" fill="url(#sparkFill)" opacity="0">
+    <animate attributeName="opacity" values="0;0.18" dur="0.8s" begin="1.4s" fill="freeze"/>
+  </path>
+  <polyline points="{poly}" fill="none" stroke="{CYAN}" stroke-width="1.5" stroke-linejoin="round" filter="url(#glowSoft)" stroke-dasharray="700" stroke-dashoffset="700">
+    <animate attributeName="stroke-dashoffset" from="700" to="0" dur="1.6s" begin="1.1s" fill="freeze" calcMode="spline" keyTimes="0;1" keySplines="0.3, 0, 0.2, 1"/>
+  </polyline>
+  <circle cx="{lx}" cy="{ly}" r="3" fill="{GREEN_SOFT}" filter="url(#glow)" opacity="0">
+    <animate attributeName="opacity" values="0;1" dur="0.3s" begin="2.7s" fill="freeze"/>
+    <animate attributeName="r" values="3;4.5;3" dur="1.6s" begin="2.7s" repeatCount="indefinite"/>
+  </circle>
+'''
+
+
 def _stat_block(x, y, value, label, accent, begin):
     return f'''  <g transform="translate({x}, {y})" opacity="0">
-    <animate attributeName="opacity" values="0;1" dur="0.5s" begin="{begin}s" fill="freeze"/>
+    <animate attributeName="opacity" values="0;1;0.3;1" keyTimes="0;0.4;0.7;1" dur="0.6s" begin="{begin}s" fill="freeze"/>
     <text x="0" y="0" font-family="{MONO}" font-size="10" fill="{MUTED}" letter-spacing="1.5">{label}</text>
     <text x="0" y="34" font-family="{MONO}" font-size="28" fill="{accent}" filter="url(#glow)">{value}</text>
   </g>'''
@@ -46,7 +78,7 @@ def _stat_block(x, y, value, label, accent, begin):
 
 def generate_stats_panel(langs, streak_info, profile, data_ok):
     """profile: dict with stars, repos, followers, since. data_ok: real data?"""
-    W, H = 1200, 280
+    W, H = 1200, 300
 
     stats = [
         (f'{streak_info["total"]:,}', "COMMITS · 1Y", CYAN),
@@ -74,6 +106,10 @@ def generate_stats_panel(langs, streak_info, profile, data_ok):
       <stop offset="0%" stop-color="{GREEN_SOFT}"/>
       <stop offset="100%" stop-color="{CYAN}"/>
     </linearGradient>
+    <linearGradient id="sparkFill" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="{CYAN}" stop-opacity="0.8"/>
+      <stop offset="100%" stop-color="{CYAN}" stop-opacity="0"/>
+    </linearGradient>
     <linearGradient id="barShimmer" x1="0" y1="0" x2="1" y2="0">
       <stop offset="0%" stop-color="#FFFFFF" stop-opacity="0"/>
       <stop offset="50%" stop-color="#FFFFFF" stop-opacity="0.5"/>
@@ -93,7 +129,7 @@ def generate_stats_panel(langs, streak_info, profile, data_ok):
 
   <text x="700" y="62" font-family="{MONO}" font-size="12" fill="{GREEN}" opacity="0.9">$ <tspan fill="{TEXT}">./uptime --github</tspan></text>
 {blocks_svg}
-
+{_sparkline(streak_info.get("recent"), 800, 234, 330, 26)}
   <line x1="20" y1="{H - 26}" x2="{W - 20}" y2="{H - 26}" stroke="{BORDER}" stroke-width="1"/>
   <text x="30" y="{H - 10}" font-family="{MONO}" font-size="10" fill="{MUTED}">repos: {profile["repos"]} · followers: {profile["followers"]} · shipping since {profile["since"]}</text>
   <circle cx="{W - 76}" cy="{H - 14}" r="3.5" fill="{GREEN_SOFT}" filter="url(#glow)">

@@ -102,7 +102,12 @@ def simulate_contributions():
                 elif w < 0.78: col.append(3)
                 else: col.append(4)
         grid.append(col)
-    return grid, {"current": random.randint(3, 15), "longest": random.randint(20, 60), "total": random.randint(400, 1200)}
+    return grid, {
+        "current": random.randint(3, 15),
+        "longest": random.randint(20, 60),
+        "total": random.randint(400, 1200),
+        "recent": [random.randint(0, 9) for _ in range(42)],
+    }
 
 def normalize_days(days):
     if not days:
@@ -134,7 +139,8 @@ def calculate_streaks_from_days(days):
         else:
             break
 
-    return {"current": current_streak, "longest": longest_streak, "total": total}
+    recent = [d["count"] for d in ordered[-42:]]
+    return {"current": current_streak, "longest": longest_streak, "total": total, "recent": recent}
 
 def map_count_to_level(count):
     if count == 0:
