@@ -63,17 +63,18 @@ def generate_black_hole_svg(grid, streak_info, user, is_real=True):
         # Use simple attribute animations (no additive transforms)
         grid_lines.append(f'    <rect x="{x0}" y="{y0}" width="{BLOCK}" height="{BLOCK}" rx="3" fill="{color}">')
 
+        # Spiral infall: curved path toward the singularity (perpendicular
+        # control point bends every trajectory in the same swirl direction).
+        tx = target_x - x0
+        ty = target_y - y0
+        dist_c = max(1.0, (tx * tx + ty * ty) ** 0.5)
+        swirl = min(90.0, dist_c * 0.32)
+        qx = round(tx / 2 - (ty / dist_c) * swirl, 1)
+        qy = round(ty / 2 + (tx / dist_c) * swirl, 1)
         grid_lines.append(
-          f'      <animate attributeName="x"'
-          f' values="{x0};{x0};{target_x};{target_x}"'
-          f' keyTimes="0;{start_t};{impact_t};1"'
-          f' dur="{DUR}s" begin="0s" repeatCount="indefinite"/>'
-        )
-        grid_lines.append(
-          f'      <animate attributeName="y"'
-          f' values="{y0};{y0};{target_y};{target_y}"'
-          f' keyTimes="0;{start_t};{impact_t};1"'
-          f' dur="{DUR}s" begin="0s" repeatCount="indefinite"/>'
+          f'      <animateMotion path="M0,0 Q{qx},{qy} {tx},{ty}"'
+          f' keyPoints="0;0;1;1" keyTimes="0;{start_t};{impact_t};1"'
+          f' calcMode="linear" dur="{DUR}s" begin="0s" repeatCount="indefinite"/>'
         )
         grid_lines.append(
           f'      <animate attributeName="width"'
@@ -236,6 +237,16 @@ def generate_black_hole_svg(grid, streak_info, user, is_real=True):
       <stop offset="50%" stop-color="#A78BFA" stop-opacity="0.6"/>
       <stop offset="100%" stop-color="#00FFFF" stop-opacity="0.8"/>
     </linearGradient>
+    <linearGradient id="jetUp" x1="0" y1="1" x2="0" y2="0">
+      <stop offset="0%" stop-color="#E8FFFF" stop-opacity="0.9"/>
+      <stop offset="35%" stop-color="#00FFFF" stop-opacity="0.5"/>
+      <stop offset="100%" stop-color="#7C3AED" stop-opacity="0"/>
+    </linearGradient>
+    <linearGradient id="jetDown" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#E8FFFF" stop-opacity="0.9"/>
+      <stop offset="35%" stop-color="#00FFFF" stop-opacity="0.5"/>
+      <stop offset="100%" stop-color="#7C3AED" stop-opacity="0"/>
+    </linearGradient>
     <linearGradient id="scanLine" x1="0" y1="0" x2="0" y2="1">
       <stop offset="0%" stop-color="#00FF41" stop-opacity="0"/>
       <stop offset="40%" stop-color="#00FF41" stop-opacity="0.12"/>
@@ -312,6 +323,7 @@ def generate_black_hole_svg(grid, streak_info, user, is_real=True):
       <animate attributeName="opacity" values="0.1;0.4;0.5" keyTimes="0;{absorb_end_t};1" dur="{DUR}s" repeatCount="indefinite"/>
     </circle>
     
+    <g transform="rotate(-10)">
     <!-- Accretion disk 1 -->
     <ellipse rx="5" ry="1.5" fill="none" stroke="url(#accretion1)" stroke-width="3" opacity="0" filter="url(#glowStrong)">
       <animate attributeName="rx" values="5;38;68" keyTimes="0;{absorb_end_t};1" dur="{DUR}s" repeatCount="indefinite"/>
@@ -334,10 +346,33 @@ def generate_black_hole_svg(grid, streak_info, user, is_real=True):
       <animateTransform attributeName="transform" type="rotate" from="0" to="360" dur="4.1s" repeatCount="indefinite"/>
     </ellipse>
     
+    <!-- Polar jets: fire once the hole is feeding at full rate -->
+    <g transform="rotate(-18)">
+      <rect x="-1.5" y="-8" width="3" height="0" fill="url(#jetUp)" opacity="0" filter="url(#glowStrong)">
+        <animate attributeName="height" values="0;6;95" keyTimes="0;{absorb_end_t};1" dur="{DUR}s" repeatCount="indefinite"/>
+        <animate attributeName="y" values="-8;-14;-103" keyTimes="0;{absorb_end_t};1" dur="{DUR}s" repeatCount="indefinite"/>
+        <animate attributeName="opacity" values="0;0.15;0.7" keyTimes="0;{absorb_end_t};1" dur="{DUR}s" repeatCount="indefinite"/>
+      </rect>
+      <rect x="-1.5" y="8" width="3" height="0" fill="url(#jetDown)" opacity="0" filter="url(#glowStrong)">
+        <animate attributeName="height" values="0;6;95" keyTimes="0;{absorb_end_t};1" dur="{DUR}s" repeatCount="indefinite"/>
+        <animate attributeName="y" values="8;8;8" keyTimes="0;{absorb_end_t};1" dur="{DUR}s" repeatCount="indefinite"/>
+        <animate attributeName="opacity" values="0;0.15;0.7" keyTimes="0;{absorb_end_t};1" dur="{DUR}s" repeatCount="indefinite"/>
+      </rect>
+    </g>
+
+    </g>
+
     <!-- Event horizon ring -->
     <circle r="5" fill="none" stroke="#9333EA" stroke-width="1.5" opacity="0" filter="url(#glowStrong)">
       <animate attributeName="r" values="5;18;40" keyTimes="0;{absorb_end_t};1" dur="{DUR}s" repeatCount="indefinite"/>
       <animate attributeName="opacity" values="0;0.75;0.85" keyTimes="0;{absorb_end_t};1" dur="{DUR}s" repeatCount="indefinite"/>
+    </circle>
+
+    <!-- Photon ring: thin bright circle just outside the horizon -->
+    <circle r="5.5" fill="none" stroke="#E8FFFF" stroke-width="1" opacity="0" filter="url(#glowStrong)">
+      <animate attributeName="r" values="5.5;16;35" keyTimes="0;{absorb_end_t};1" dur="{DUR}s" repeatCount="indefinite"/>
+      <animate attributeName="opacity" values="0;0.55;0.9" keyTimes="0;{absorb_end_t};1" dur="{DUR}s" repeatCount="indefinite"/>
+      <animate attributeName="stroke-width" values="1;1.2;1.6" keyTimes="0;{absorb_end_t};1" dur="{DUR}s" repeatCount="indefinite"/>
     </circle>
     
     <!-- BH core (dark center, grows as it feeds) -->
