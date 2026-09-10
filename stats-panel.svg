@@ -1,0 +1,138 @@
+<svg width="1200" height="300" viewBox="0 0 1200 300" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="barFill" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0%" stop-color="#39D353"/>
+      <stop offset="100%" stop-color="#00FFFF"/>
+    </linearGradient>
+    <linearGradient id="sparkFill" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#00FFFF" stop-opacity="0.8"/>
+      <stop offset="100%" stop-color="#00FFFF" stop-opacity="0"/>
+    </linearGradient>
+    <linearGradient id="barShimmer" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0%" stop-color="#FFFFFF" stop-opacity="0"/>
+      <stop offset="50%" stop-color="#FFFFFF" stop-opacity="0.5"/>
+      <stop offset="100%" stop-color="#FFFFFF" stop-opacity="0"/>
+    </linearGradient>
+    <filter id="glow">
+      <feGaussianBlur stdDeviation="1.5" result="b"/>
+      <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+    <filter id="glowSoft">
+      <feGaussianBlur stdDeviation="0.8" result="b"/>
+      <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+  </defs>
+
+  <rect width="1200" height="300" rx="12" fill="#0A0E14" stroke="#1F2A3A" stroke-width="1"/>
+  <path d="M0 12 Q0 0 12 0 H1188 Q1200 0 1200 12 V32 H0 Z" fill="#0D1420"/>
+  <circle cx="22" cy="16" r="5" fill="#FF5F56" opacity="0.75"/>
+  <circle cx="42" cy="16" r="5" fill="#FFBD2E" opacity="0.75"/>
+  <circle cx="62" cy="16" r="5" fill="#27C93F" opacity="0.75"/>
+  <text x="600" y="20" text-anchor="middle" font-family="ui-monospace,SFMono-Regular,Menlo,monospace" font-size="11" fill="#64748B">stats --live</text>
+  <!-- data: REAL_API -->
+
+  <text x="70" y="62" font-family="ui-monospace,SFMono-Regular,Menlo,monospace" font-size="12" fill="#00FF41" opacity="0.9">$ <tspan fill="#E6EDF3">git shortlog --languages</tspan></text>
+  <g transform="translate(70, 96)">
+    <circle cx="4" cy="-4" r="3.5" fill="#f1e05a"/>
+    <text x="16" y="0" font-family="ui-monospace,SFMono-Regular,Menlo,monospace" font-size="11" fill="#E6EDF3" opacity="0.92">JavaScript</text>
+    <text x="440" y="0" text-anchor="end" font-family="ui-monospace,SFMono-Regular,Menlo,monospace" font-size="11" fill="#00FFFF" opacity="0.9">32.8%</text>
+    <rect x="0" y="8" width="440" height="5" rx="2.5" fill="#1B2838"/>
+    <rect x="0" y="8" width="144.3" height="5" rx="2.5" fill="url(#barFill)" filter="url(#glowSoft)">
+      <animate attributeName="width" from="0" to="144.3" dur="1.2s" begin="0.15s" fill="freeze" calcMode="spline" keyTimes="0;1" keySplines="0.16, 1, 0.3, 1"/>
+    </rect>
+    <rect x="0" y="8" width="44" height="5" rx="2.5" fill="url(#barShimmer)" opacity="0.3">
+      <animate attributeName="x" values="0;396;0" dur="5.0s" begin="0.15s" repeatCount="indefinite"/>
+    </rect>
+  </g>
+  <g transform="translate(70, 130)">
+    <circle cx="4" cy="-4" r="3.5" fill="#e34c26"/>
+    <text x="16" y="0" font-family="ui-monospace,SFMono-Regular,Menlo,monospace" font-size="11" fill="#E6EDF3" opacity="0.92">HTML</text>
+    <text x="440" y="0" text-anchor="end" font-family="ui-monospace,SFMono-Regular,Menlo,monospace" font-size="11" fill="#00FFFF" opacity="0.9">28.5%</text>
+    <rect x="0" y="8" width="440" height="5" rx="2.5" fill="#1B2838"/>
+    <rect x="0" y="8" width="125.5" height="5" rx="2.5" fill="url(#barFill)" filter="url(#glowSoft)">
+      <animate attributeName="width" from="0" to="125.5" dur="1.4s" begin="0.29s" fill="freeze" calcMode="spline" keyTimes="0;1" keySplines="0.16, 1, 0.3, 1"/>
+    </rect>
+    <rect x="0" y="8" width="44" height="5" rx="2.5" fill="url(#barShimmer)" opacity="0.3">
+      <animate attributeName="x" values="0;396;0" dur="5.5s" begin="0.29s" repeatCount="indefinite"/>
+    </rect>
+  </g>
+  <g transform="translate(70, 164)">
+    <circle cx="4" cy="-4" r="3.5" fill="#3178c6"/>
+    <text x="16" y="0" font-family="ui-monospace,SFMono-Regular,Menlo,monospace" font-size="11" fill="#E6EDF3" opacity="0.92">TypeScript</text>
+    <text x="440" y="0" text-anchor="end" font-family="ui-monospace,SFMono-Regular,Menlo,monospace" font-size="11" fill="#00FFFF" opacity="0.9">20.8%</text>
+    <rect x="0" y="8" width="440" height="5" rx="2.5" fill="#1B2838"/>
+    <rect x="0" y="8" width="91.5" height="5" rx="2.5" fill="url(#barFill)" filter="url(#glowSoft)">
+      <animate attributeName="width" from="0" to="91.5" dur="1.6s" begin="0.43s" fill="freeze" calcMode="spline" keyTimes="0;1" keySplines="0.16, 1, 0.3, 1"/>
+    </rect>
+    <rect x="0" y="8" width="44" height="5" rx="2.5" fill="url(#barShimmer)" opacity="0.3">
+      <animate attributeName="x" values="0;396;0" dur="6.0s" begin="0.43s" repeatCount="indefinite"/>
+    </rect>
+  </g>
+  <g transform="translate(70, 198)">
+    <circle cx="4" cy="-4" r="3.5" fill="#663399"/>
+    <text x="16" y="0" font-family="ui-monospace,SFMono-Regular,Menlo,monospace" font-size="11" fill="#E6EDF3" opacity="0.92">CSS</text>
+    <text x="440" y="0" text-anchor="end" font-family="ui-monospace,SFMono-Regular,Menlo,monospace" font-size="11" fill="#00FFFF" opacity="0.9">10.1%</text>
+    <rect x="0" y="8" width="440" height="5" rx="2.5" fill="#1B2838"/>
+    <rect x="0" y="8" width="44.6" height="5" rx="2.5" fill="url(#barFill)" filter="url(#glowSoft)">
+      <animate attributeName="width" from="0" to="44.6" dur="1.8s" begin="0.57s" fill="freeze" calcMode="spline" keyTimes="0;1" keySplines="0.16, 1, 0.3, 1"/>
+    </rect>
+    <rect x="0" y="8" width="44" height="5" rx="2.5" fill="url(#barShimmer)" opacity="0.3">
+      <animate attributeName="x" values="0;396;0" dur="6.5s" begin="0.57s" repeatCount="indefinite"/>
+    </rect>
+  </g>
+  <g transform="translate(70, 232)">
+    <circle cx="4" cy="-4" r="3.5" fill="#b07219"/>
+    <text x="16" y="0" font-family="ui-monospace,SFMono-Regular,Menlo,monospace" font-size="11" fill="#E6EDF3" opacity="0.92">Java</text>
+    <text x="440" y="0" text-anchor="end" font-family="ui-monospace,SFMono-Regular,Menlo,monospace" font-size="11" fill="#00FFFF" opacity="0.9">7.8%</text>
+    <rect x="0" y="8" width="440" height="5" rx="2.5" fill="#1B2838"/>
+    <rect x="0" y="8" width="34.1" height="5" rx="2.5" fill="url(#barFill)" filter="url(#glowSoft)">
+      <animate attributeName="width" from="0" to="34.1" dur="2.0s" begin="0.71s" fill="freeze" calcMode="spline" keyTimes="0;1" keySplines="0.16, 1, 0.3, 1"/>
+    </rect>
+    <rect x="0" y="8" width="44" height="5" rx="2.5" fill="url(#barShimmer)" opacity="0.3">
+      <animate attributeName="x" values="0;396;0" dur="7.0s" begin="0.71s" repeatCount="indefinite"/>
+    </rect>
+  </g>
+
+  <line x1="620" y1="52" x2="620" y2="260" stroke="#1F2A3A" stroke-width="1"/>
+
+  <text x="700" y="62" font-family="ui-monospace,SFMono-Regular,Menlo,monospace" font-size="12" fill="#00FF41" opacity="0.9">$ <tspan fill="#E6EDF3">./uptime --github</tspan></text>
+  <g transform="translate(700, 106)" opacity="0">
+    <animate attributeName="opacity" values="0;1;0.3;1" keyTimes="0;0.4;0.7;1" dur="0.6s" begin="0.4s" fill="freeze"/>
+    <text x="0" y="0" font-family="ui-monospace,SFMono-Regular,Menlo,monospace" font-size="10" fill="#64748B" letter-spacing="1.5">COMMITS · 1Y</text>
+    <text x="0" y="34" font-family="ui-monospace,SFMono-Regular,Menlo,monospace" font-size="28" fill="#00FFFF" filter="url(#glow)">1,427</text>
+  </g>
+  <g transform="translate(960, 106)" opacity="0">
+    <animate attributeName="opacity" values="0;1;0.3;1" keyTimes="0;0.4;0.7;1" dur="0.6s" begin="0.58s" fill="freeze"/>
+    <text x="0" y="0" font-family="ui-monospace,SFMono-Regular,Menlo,monospace" font-size="10" fill="#64748B" letter-spacing="1.5">CURRENT STREAK</text>
+    <text x="0" y="34" font-family="ui-monospace,SFMono-Regular,Menlo,monospace" font-size="28" fill="#39D353" filter="url(#glow)">0d</text>
+  </g>
+  <g transform="translate(700, 186)" opacity="0">
+    <animate attributeName="opacity" values="0;1;0.3;1" keyTimes="0;0.4;0.7;1" dur="0.6s" begin="0.76s" fill="freeze"/>
+    <text x="0" y="0" font-family="ui-monospace,SFMono-Regular,Menlo,monospace" font-size="10" fill="#64748B" letter-spacing="1.5">LONGEST STREAK</text>
+    <text x="0" y="34" font-family="ui-monospace,SFMono-Regular,Menlo,monospace" font-size="28" fill="#39D353" filter="url(#glow)">31d</text>
+  </g>
+  <g transform="translate(960, 186)" opacity="0">
+    <animate attributeName="opacity" values="0;1;0.3;1" keyTimes="0;0.4;0.7;1" dur="0.6s" begin="0.94s" fill="freeze"/>
+    <text x="0" y="0" font-family="ui-monospace,SFMono-Regular,Menlo,monospace" font-size="10" fill="#64748B" letter-spacing="1.5">STARS EARNED</text>
+    <text x="0" y="34" font-family="ui-monospace,SFMono-Regular,Menlo,monospace" font-size="28" fill="#00FFFF" filter="url(#glow)">★ 7</text>
+  </g>
+  <text x="700" y="252" font-family="ui-monospace,SFMono-Regular,Menlo,monospace" font-size="9" fill="#64748B" letter-spacing="1">ACTIVITY</text>
+  <text x="700" y="264" font-family="ui-monospace,SFMono-Regular,Menlo,monospace" font-size="9" fill="#475569">42 DAYS</text>
+  <path d="M800.0,260 L800.0,254.1 L808.0,260.0 L816.1,239.9 L824.1,255.3 L832.2,260.0 L840.2,239.9 L848.3,258.8 L856.3,234.0 L864.4,257.6 L872.4,255.3 L880.5,260.0 L888.5,255.3 L896.6,256.5 L904.6,254.1 L912.7,260.0 L920.7,257.6 L928.8,255.3 L936.8,255.3 L944.9,260.0 L952.9,260.0 L961.0,260.0 L969.0,258.8 L977.1,257.6 L985.1,254.1 L993.2,245.8 L1001.2,258.8 L1009.3,260.0 L1017.3,260.0 L1025.4,260.0 L1033.4,260.0 L1041.5,260.0 L1049.5,260.0 L1057.6,245.8 L1065.6,252.9 L1073.7,255.3 L1081.7,260.0 L1089.8,257.6 L1097.8,260.0 L1105.9,260.0 L1113.9,260.0 L1122.0,260.0 L1130.0,260.0 L1130.0,260 Z" fill="url(#sparkFill)" opacity="0">
+    <animate attributeName="opacity" values="0;0.18" dur="0.8s" begin="1.4s" fill="freeze"/>
+  </path>
+  <polyline points="800.0,254.1 808.0,260.0 816.1,239.9 824.1,255.3 832.2,260.0 840.2,239.9 848.3,258.8 856.3,234.0 864.4,257.6 872.4,255.3 880.5,260.0 888.5,255.3 896.6,256.5 904.6,254.1 912.7,260.0 920.7,257.6 928.8,255.3 936.8,255.3 944.9,260.0 952.9,260.0 961.0,260.0 969.0,258.8 977.1,257.6 985.1,254.1 993.2,245.8 1001.2,258.8 1009.3,260.0 1017.3,260.0 1025.4,260.0 1033.4,260.0 1041.5,260.0 1049.5,260.0 1057.6,245.8 1065.6,252.9 1073.7,255.3 1081.7,260.0 1089.8,257.6 1097.8,260.0 1105.9,260.0 1113.9,260.0 1122.0,260.0 1130.0,260.0" fill="none" stroke="#00FFFF" stroke-width="1.5" stroke-linejoin="round" filter="url(#glowSoft)" stroke-dasharray="700" stroke-dashoffset="700">
+    <animate attributeName="stroke-dashoffset" from="700" to="0" dur="1.6s" begin="1.1s" fill="freeze" calcMode="spline" keyTimes="0;1" keySplines="0.3, 0, 0.2, 1"/>
+  </polyline>
+  <circle cx="1130.0" cy="260.0" r="3" fill="#39D353" filter="url(#glow)" opacity="0">
+    <animate attributeName="opacity" values="0;1" dur="0.3s" begin="2.7s" fill="freeze"/>
+    <animate attributeName="r" values="3;4.5;3" dur="1.6s" begin="2.7s" repeatCount="indefinite"/>
+  </circle>
+
+  <line x1="20" y1="274" x2="1180" y2="274" stroke="#1F2A3A" stroke-width="1"/>
+  <text x="30" y="290" font-family="ui-monospace,SFMono-Regular,Menlo,monospace" font-size="10" fill="#64748B">repos: 31 · followers: 5 · shipping since 2021</text>
+  <circle cx="1124" cy="286" r="3.5" fill="#39D353" filter="url(#glow)">
+    <animate attributeName="opacity" values="1;0.35;1" dur="1.6s" repeatCount="indefinite"/>
+  </circle>
+  <text x="1134" y="290" font-family="ui-monospace,SFMono-Regular,Menlo,monospace" font-size="10" fill="#39D353" opacity="0.8">LIVE</text>
+</svg>
